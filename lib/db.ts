@@ -1,0 +1,95 @@
+import { neon } from '@neondatabase/serverless'
+import { generateSessionCode } from './session-code'
+
+// Lazy so the app builds and Module 2 runs without a database configured.
+// Only Module 1's persistence needs DATABASE_URL.
+let client: ReturnType<typeof neon> | null = null
+function sql() {
+  if (!client) {
+    const url = process.env.DATABASE_URL
+    if (!url) throw new Error('DATABASE_URL is not set. See README for Neon setup.')
+    client = neon(url)
+  }
+  return client
+}
+
+export type SessionRow = { id: string; code: string; closed_at: string | null }
+
+export type SubmissionRow = {
+  device_hash: string
+  current_age: number
+  retirement_age: number
+  desired_income: number
+  match_rate: number
+  first_withdrawal: number
+  lump_sum: number
+  first_contribution: number
+  created_at: string
+}
+
+export async function createSession() {
+  const code = generateSessionCode()
+  const instructorToken = crypto.randomUUID()
+  await sql()`
+    insert into sessions (code, instructor_token) values (${code}, ${instructorToken})
+  `
+  return { code, instructorToken }
+}
+
+export async function getSession(code: string): Promise<SessionRow | null> {
+  const rows = (await sql()`
+    select id, code, closed_at from sessions where code = ${code.toUpperCase()}
+  `) as unknown as SessionRow[]
+  return rows[0] ?? null
+}
+
+export type SubmissionArgs = {
+  sessionId: string
+  deviceHash: string
+  currentAge: number
+  retirementAge: number
+  desiredIncome: number
+  matchRate: number
+  firstWithdrawal: number
+  lumpSum: number
+  firstContribution: number
+}
+
+export async function upsertSubmission(a: SubmissionArgs) {
+  await sql()`
+    insert into submissions (
+      session_id, device_hash, current_age, retirement_age, desired_income,
+      match_rate, first_withdrawal, lump_sum, first_contribution
+    ) values (
+      ${a.sessionId}, ${a.deviceHash}, ${a.currentAge}, ${a.retirementAge},
+      ${a.desiredIncome}, ${a.matchRate}, ${a.firstWithdrawal}, ${a.lumpSum},
+      ${a.firstContribution}
+    )
+    on conflict (session_id, device_hash) do update set
+      current_age = excluded.current_age,
+      retirement_age = excluded.retirement_age,
+      desired_income = excluded.desired_income,
+      match_rate = excluded.match_rate,
+      first_withdrawal = excluded.first_withdrawal,
+      lump_sum = excluded.lump_sum,
+      first_contribution = excluded.first_contribution,
+      created_at = now()
+  `
+}
+
+export async function listSubmissions(sessionId: string): Promise<SubmissionRow[]> {
+  return (await sql()`
+    select device_hash, current_age, retirement_age, desired_income, match_rate,
+           first_withdrawal, lump_sum, first_contribution, created_at
+    from submissions where session_id = ${sessionId} order by created_at
+  `) as unknown as SubmissionRow[]
+}
+
+export async function closeSession(code: string, instructorToken: string) {
+  const rows = (await sql()`
+    update sessions set closed_at = now()
+    where code = ${code.toUpperCase()} and instructor_token = ${instructorToken}
+    returning id
+  `) as unknown as { id: string }[]
+  return rows.length > 0
+}
