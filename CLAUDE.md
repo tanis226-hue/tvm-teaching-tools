@@ -28,8 +28,13 @@ Prefer explicit numeric `domain={[min, max]}` over the `'dataMin - 2'` string fo
 
 ## Next 16
 
-- `export const dynamic` is **gone**. `export const runtime` is **deprecated**. Do not
-  add either to route handlers.
+- The route-segment options `dynamic`, `revalidate`, `fetchCache`, `dynamicParams` and
+  `runtime` **still exist** in 16.3.3 (verified in
+  `node_modules/next/dist/build/segment-config/app/app-segment-config.js`). They are
+  removed only when Cache Components is enabled, which `next.config.ts` does not do.
+  This project simply does not need them: route handlers are resolved per request and
+  `.next/prerender-manifest.json` contains no API route. `runtime = 'edge'` is separately
+  deprecated. Do not add them back, but do not claim they are unavailable either.
 - Route and page `params` are Promises: `{ params }: { params: Promise<{ code: string }> }`,
   unwrapped with `await` on the server and `use()` in client components.
 - Read `node_modules/next/dist/docs/` before assuming an API. It differs from training data.

@@ -57,7 +57,8 @@ export default function StudentPage({ params }: { params: Promise<{ code: string
         setStatus('sent')
         return
       }
-      setError((await res.json()).error ?? 'Something went wrong')
+      const body = await res.json().catch(() => null)
+      setError(body?.error ?? `Something went wrong (${res.status})`)
     } catch {
       setError('Could not reach the server')
     }

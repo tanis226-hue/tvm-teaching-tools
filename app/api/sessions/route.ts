@@ -4,7 +4,9 @@ import { createSession } from '@/lib/db'
 export async function POST() {
   try {
     return NextResponse.json(await createSession(), { status: 201 })
-  } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 })
+  } catch {
+    // Never echo the driver's message: it carries the Neon endpoint hostname,
+    // and this page is on a lecture-hall projector.
+    return NextResponse.json({ error: 'Could not start a session' }, { status: 500 })
   }
 }

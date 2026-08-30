@@ -3,21 +3,45 @@
 import { useState } from 'react'
 import QRCode from 'qrcode'
 
+// The dashboard needs this to reach the close endpoint. sessionStorage, never
+// the URL: the dashboard URL goes on a projector and into Netlify's logs.
+export const instructorTokenKey = (code: string) => `tvm-instr-${code}`
+
 export default function InstructorPage() {
   const [code, setCode] = useState('')
   const [qr, setQr] = useState('')
   const [error, setError] = useState('')
+  const [pending, setPending] = useState(false)
 
   async function start() {
+    if (pending) return
+    setPending(true)
     setError('')
-    const res = await fetch('/api/sessions', { method: 'POST' })
-    if (!res.ok) {
-      setError((await res.json()).error ?? 'Could not start a session')
-      return
+    try {
+      const res = await fetch('/api/sessions', { method: 'POST' })
+      const body = await res.json().catch(() => null)
+      if (!res.ok || !body?.code) {
+        setError(body?.error ?? `Could not start a session (${res.status})`)
+        return
+      }
+      // Build the QR before committing the code, so a double-click can never
+      // project session B's code above session A's QR.
+      const dataUrl = await QRCode.toDataURL(`${location.origin}/s/${body.code}`, {
+        width: 640,
+        margin: 1,
+      })
+      try {
+        sessionStorage.setItem(instructorTokenKey(body.code), body.instructorToken)
+      } catch {
+        // Private mode. The session still works; only the close button is lost.
+      }
+      setQr(dataUrl)
+      setCode(body.code)
+    } catch {
+      setError('Could not reach the server')
+    } finally {
+      setPending(false)
     }
-    const started = await res.json()
-    setCode(started.code)
-    setQr(await QRCode.toDataURL(`${location.origin}/s/${started.code}`, { width: 640, margin: 1 }))
   }
 
   return (
@@ -27,9 +51,10 @@ export default function InstructorPage() {
         <>
           <button
             onClick={start}
-            className="mt-8 rounded-xl bg-slate-900 px-8 py-4 text-xl font-semibold text-white"
+            disabled={pending}
+            className="mt-8 rounded-xl bg-slate-900 px-8 py-4 text-xl font-semibold text-white disabled:bg-slate-400"
           >
-            Start a class session
+            {pending ? 'Starting...' : 'Start a class session'}
           </button>
           {error && <p className="mt-4 text-red-600">{error}</p>}
         </>
@@ -45,6 +70,9 @@ export default function InstructorPage() {
           >
             Open the results dashboard
           </a>
+          <p className="text-sm text-slate-500">
+            Keep this tab open. The dashboard&apos;s close-session button needs it.
+          </p>
         </div>
       )}
     </main>

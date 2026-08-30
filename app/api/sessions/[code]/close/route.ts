@@ -6,12 +6,25 @@ export async function POST(
   { params }: { params: Promise<{ code: string }> },
 ) {
   const { code } = await params
-  const { instructorToken } = await req.json()
+
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const instructorToken = (body as { instructorToken?: unknown })?.instructorToken
   if (typeof instructorToken !== 'string') {
     return NextResponse.json({ error: 'Missing instructor token' }, { status: 400 })
   }
-  const ok = await closeSession(code, instructorToken)
-  return ok
-    ? NextResponse.json({ ok: true })
-    : NextResponse.json({ error: 'Not authorized' }, { status: 403 })
+
+  try {
+    const ok = await closeSession(code, instructorToken)
+    return ok
+      ? NextResponse.json({ ok: true })
+      : NextResponse.json({ error: 'Not authorized' }, { status: 403 })
+  } catch {
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
 }

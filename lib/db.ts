@@ -13,10 +13,18 @@ function sql() {
   return client
 }
 
-export type SessionRow = { id: string; code: string; closed_at: string | null }
+export type SessionRow = {
+  id: string
+  code: string
+  closed_at: string | null
+  created_at: string
+}
 
+// device_hash is deliberately absent. It is the upsert conflict target, so
+// publishing it to anyone holding the session code hands out a write key: a
+// harvested hash lets an attacker silently UPDATE that student's row, leaving
+// the response count unchanged while the medians become fiction.
 export type SubmissionRow = {
-  device_hash: string
   current_age: number
   retirement_age: number
   desired_income: number
@@ -38,7 +46,7 @@ export async function createSession() {
 
 export async function getSession(code: string): Promise<SessionRow | null> {
   const rows = (await sql()`
-    select id, code, closed_at from sessions where code = ${code.toUpperCase()}
+    select id, code, closed_at, created_at from sessions where code = ${code.toUpperCase()}
   `) as unknown as SessionRow[]
   return rows[0] ?? null
 }
@@ -55,15 +63,31 @@ export type SubmissionArgs = {
   firstContribution: number
 }
 
-export async function upsertSubmission(a: SubmissionArgs) {
-  await sql()`
+export const MAX_SUBMISSIONS_PER_SESSION = 300
+
+// deviceHash is client-supplied and bound to nothing server-side, so a script
+// sending a fresh UUID each time defeats the UNIQUE constraint. The cap rides
+// inside the same statement rather than a separate count(*) round trip. An
+// already-present device_hash still takes the conflict path, so a student
+// updating their own answer is never blocked by a full session.
+export async function upsertSubmission(a: SubmissionArgs): Promise<boolean> {
+  const rows = (await sql()`
     insert into submissions (
       session_id, device_hash, current_age, retirement_age, desired_income,
       match_rate, first_withdrawal, lump_sum, first_contribution
-    ) values (
-      ${a.sessionId}, ${a.deviceHash}, ${a.currentAge}, ${a.retirementAge},
-      ${a.desiredIncome}, ${a.matchRate}, ${a.firstWithdrawal}, ${a.lumpSum},
-      ${a.firstContribution}
+    )
+    select ${a.sessionId}, ${a.deviceHash}, ${a.currentAge}, ${a.retirementAge},
+           ${a.desiredIncome}, ${a.matchRate}, ${a.firstWithdrawal}, ${a.lumpSum},
+           ${a.firstContribution}
+    where (
+      select count(*) from submissions where session_id = ${a.sessionId}
+    ) < ${MAX_SUBMISSIONS_PER_SESSION}
+    -- Without this disjunct a full session would filter the row out of the
+    -- SELECT entirely, so ON CONFLICT would never fire and a student already
+    -- in the session could no longer correct their own answer.
+    or exists (
+      select 1 from submissions
+      where session_id = ${a.sessionId} and device_hash = ${a.deviceHash}
     )
     on conflict (session_id, device_hash) do update set
       current_age = excluded.current_age,
@@ -74,12 +98,14 @@ export async function upsertSubmission(a: SubmissionArgs) {
       lump_sum = excluded.lump_sum,
       first_contribution = excluded.first_contribution,
       created_at = now()
-  `
+    returning id
+  `) as unknown as { id: string }[]
+  return rows.length > 0
 }
 
 export async function listSubmissions(sessionId: string): Promise<SubmissionRow[]> {
   return (await sql()`
-    select device_hash, current_age, retirement_age, desired_income, match_rate,
+    select current_age, retirement_age, desired_income, match_rate,
            first_withdrawal, lump_sum, first_contribution, created_at
     from submissions where session_id = ${sessionId} order by created_at
   `) as unknown as SubmissionRow[]
