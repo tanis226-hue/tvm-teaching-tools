@@ -1,5 +1,14 @@
 # Time Value of Money Teaching Tools
 
+**Live: https://tvm-tools.netlify.app**
+
+| | |
+|---|---|
+| Start a class session | https://tvm-tools.netlify.app/instructor |
+| Rent vs buy (projector) | https://tvm-tools.netlify.app/rentbuy |
+| Netlify admin | https://app.netlify.com/projects/tvm-tools |
+| Neon project | `tvm-teaching-tools`, region `aws-us-east-1` |
+
 Two web tools for a first-semester Business Mathematics course at FGCU.
 
 - **Module 1, Retirement calculator.** Student-facing and mobile-first, reached by QR code during lecture. Anonymous submissions aggregate to a live instructor dashboard.
@@ -19,6 +28,23 @@ npm test        # 88 tests, including every published worked example
 npm run build
 ```
 
+## Deployment
+
+Hosted on Netlify, database on Neon. `DATABASE_URL` is set as a Netlify environment
+variable for the production, deploy-preview and branch-deploy contexts; it is not in the
+repo. To redeploy from this machine:
+
+```bash
+netlify deploy --build          # preview URL, smoke-test this first
+netlify deploy --build --prod   # promote to tvm-tools.netlify.app
+```
+
+Node is pinned to 24 via `.nvmrc`. There is no `netlify.toml`: Netlify auto-detects
+Next.js and provisions the OpenNext adapter, and restating the defaults would only create
+drift. Do **not** use Netlify's "add a database" button; it provisions a separate database
+under a different variable name and every Module 1 route would start returning 500s while
+the build stays green.
+
 ## Database
 
 Module 1 stores submissions in Neon Postgres. Put the pooled connection string in `.env.local`:
@@ -33,7 +59,27 @@ Apply `db/schema.sql` once, either from the Neon SQL Editor or with:
 node --env-file=.env.local -e "const{neon}=require('@neondatabase/serverless');const fs=require('fs');const sql=neon(process.env.DATABASE_URL);(async()=>{for(const s of fs.readFileSync('db/schema.sql','utf8').split(';').map(x=>x.trim()).filter(Boolean))await sql.query(s);console.log('schema applied')})()"
 ```
 
-Nothing personally identifying is collected or stored: no names, no student IDs, no emails, no IP addresses. Submissions carry three inputs, a match rate, three computed outputs, and a per-session browser token used only to stop one student submitting thirty times.
+Nothing personally identifying is collected or stored: no names, no student IDs, no emails,
+no IP addresses. Submissions carry three inputs, a match rate and three computed outputs.
+
+A per-session browser id in `localStorage` discourages accidental double-submits from the
+same phone; it is not a real identity check, since the value is client-supplied. The actual
+flood protection is the 300-row cap per session in `lib/db.ts` plus the four-hour write
+window in `app/api/submit/route.ts`. `device_hash` is never returned by the results
+endpoint: it is the upsert conflict key, so publishing it would hand out a write key for
+every student's row.
+
+## Running a session safely
+
+- The dashboard polls every 8 seconds, pauses while its tab is hidden, and stops after
+  three hours with a Resume button. That cap exists because Neon's free tier is 100
+  CU-hours a month and a forgotten projector tab would exhaust it in about two weeks,
+  which suspends the database and takes Module 1 down until the next billing period.
+- Keep the `/instructor` tab open during class. It holds the instructor token in
+  `sessionStorage`, which is what makes the dashboard's **Close session** button work.
+  Closing a session is permanent; there is no reopen path.
+- Sessions stop accepting submissions four hours after creation, so an old code cannot be
+  written to later in the term.
 
 ## Classroom workflow
 
