@@ -83,7 +83,7 @@ every student's row.
 
 ## Classroom workflow
 
-**Module 1.** Open `/instructor` and press "Start a class session". Project the QR code and the six-character code. Students scan, adjust three inputs, and press send. Open `/d/<CODE>` for the live dashboard; it refreshes every four seconds.
+**Module 1.** Open `/instructor` and press "Start a class session". Project the QR code and the six-character code. Students scan, adjust three inputs, and press send. Open `/d/<CODE>` for the live dashboard; it refreshes every eight seconds. The dashboard also carries the **Close session** button, which only appears while the `/instructor` tab that created the session is still open.
 
 The three moments land in a fixed order and the UI enforces it: the inflated income first, then the lump sum, then the monthly contribution. Do not reorder them. The first two numbers are supposed to be alarming so the third one feels like relief.
 
