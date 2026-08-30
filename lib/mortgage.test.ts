@@ -40,16 +40,16 @@ describe('Fort Myers preset', () => {
 
 describe('National preset', () => {
   const r = simulateRentBuy(NATIONAL)
-  it('breaks even at month 124', () => expect(r.breakevenMonth).toBe(124))
+  it('breaks even at month 112', () => expect(r.breakevenMonth).toBe(112))
   it('settles ahead at the same month, crossing once', () => {
     expect(r.crossings).toHaveLength(1)
-    expect(r.settledAheadMonth).toBe(124)
+    expect(r.settledAheadMonth).toBe(112)
   })
   it('tracks net worth at years 3, 10 and 50', () => {
     near(r.rows[35].buyerNetWorth, 67971)
     near(r.rows[119].buyerNetWorth, 231147)
-    near(r.rows[599].buyerNetWorth, 6045543)
-    near(r.rows[599].renterNetWorth, 4777832)
+    near(r.rows[599].buyerNetWorth, 6240721)
+    near(r.rows[599].renterNetWorth, 4597064)
   })
   it('grows rent from $2,300 to $11,352', () => {
     near(r.rows[0].rent, 2300)

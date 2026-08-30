@@ -231,9 +231,16 @@ export const NATIONAL: RentBuyInput = {
   price: 400_000,
   closingSellPct: 0.07,
   taxMode: 'flat',
-  taxPct: 0.011, // ESTIMATE, not independently sourced. See README.
+  // ATTOM 2025 Annual Property Tax Analysis reconciled with NAHB/ACS 2024. The
+  // 0.90% headline is value-weighted and dominated by California under Prop 13;
+  // the typical-home ratio is ~1.02%. 1.00% blends the two, and a buyer resets
+  // to full market value on purchase in every assessment-cap state.
+  taxPct: 0.01,
   maintAnnual: 4_100,
-  insAnnual: 2_000, // ESTIMATE, not independently sourced. See README.
+  // NAIC Homeowners Report (2023 data, pub. Jul 2026) HO-3 countrywide,
+  // interpolated to $400,000 Coverage A = $1,638, trended to mid-2026 on
+  // S&P Global approved rate changes = $2,014.
+  insAnnual: 2_000,
   floodAnnual: 0,
   includeFlood: false,
   startingRent: 2_300, // Zillow ZORI SFR US, 2026-07-31

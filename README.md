@@ -108,9 +108,25 @@ market rates and the local rent.
 | PMI | 0.38%/yr of original loan | Enact national BPMI card, upd. 2025-07-17 | `lib/mortgage.ts` |
 | Seller closing costs | 6.7% FM / 7.0% NAT | Redfin Q3 2025 commissions 5.25%; FL doc stamps + title | `lib/mortgage.ts` |
 
-Two National figures are **estimates, not sourced**: property tax 1.10% and homeowners
-insurance $2,000/yr. US effective tax rates run from about 0.3% to over 2%, so a single
-national number is a convenience. Say so if a student asks.
+| NAT property tax | 1.00% | ATTOM 2025 Annual Property Tax Analysis, reconciled with NAHB/ACS 2024 | `lib/mortgage.ts` |
+| NAT homeowners insurance | $2,000/yr | NAIC Homeowners Report (2023 data, pub. Jul 2026), HO-3 at $400k Coverage A, trended to mid-2026 | `lib/mortgage.ts` |
+
+**Two ranges worth saying out loud in class.** Property tax: Hawaii is about a third of a
+percent, Illinois and New Jersey about 1.8 to 1.9. The same $400,000 house costs $1,300 a
+year in Honolulu and $7,400 in New Jersey, which moves the answer more than any other input
+in the model. Insurance: at identical $400,000 dwelling coverage, Nevada averages about
+$1,100 and Louisiana about $3,900. The national number is a teaching midpoint, not a fact
+about anyone.
+
+**One known bias, in the buyer's favour.** Insurance is grown at the single 2.5% inflation
+dial, but NAIC measures homeowners premiums rising 2.4 to 5.3 percentage points *above*
+inflation from 2018 to 2024. A truer escalation is about 4.5% nominal, worth roughly
+$34,000 more over 30 years. The single dial is kept for coherence across the model; drag
+insurance up if you want to show the sensitivity.
+
+**Flood is off by default nationally, on for Fort Myers.** Only about 3 to 5% of US
+households carry NFIP, against roughly 75% of Lee County single-family flood policies
+sitting in a mapped zone. $0 means "no premium", not "no risk".
 
 After changing anything, run `npm test`. The Module 2 suite asserts *constraints*, not just
 values, and those are the ones that matter:
@@ -129,7 +145,7 @@ $1,338 gap sustained for 247 months, because Lee County carrying costs are 3.84%
 per year (tax 1.30 + maintenance 1.09 + homeowners 0.93 + flood 0.51). Price-to-rent is
 14.6x, mid-band for the market, so this is not an artefact of a bad rent figure.
 
-That is why **National opens the lesson** (breakeven 10.3 years, 8.1 at 20% down) and Fort
+That is why **National opens the lesson** (breakeven 9.3 years) and Fort
 Myers is the second act. The contrast is the teaching moment: the same arithmetic, the same
 decision, a different answer because of where you live.
 

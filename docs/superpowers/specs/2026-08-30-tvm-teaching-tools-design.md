@@ -245,7 +245,7 @@ Every value below was sourced on 2026-08-30. Full citations are in the README.
 | Mortgage rate | 6.66% (15-yr toggle carries 5.98%) | same | Freddie Mac PMMS 2026-08-27 |
 | Closing costs, purchase | 2% of price | 2% | excludes prepaids and escrow |
 | Closing costs, sale | 7.0% | 6.7% | applied to the appreciated sale price |
-| Property tax | flat 1.10% of market value | Florida homestead + Save Our Homes | see below |
+| Property tax | flat 1.00% of market value | Florida homestead + Save Our Homes | see below |
 | **Maintenance** | **$4,100/yr** | **$4,200/yr** | **dollars, inflating. Never market value** |
 | **Homeowners insurance** | **$2,000/yr** | **$3,576/yr** | **dollars, inflating** |
 | **Flood insurance** | off | **$1,975/yr**, toggleable | 75% of Lee County SF flood policies are in a mapped zone |
@@ -256,7 +256,7 @@ Every value below was sourced on 2026-08-30. Full citations are in the README.
 | Rent increase | 3.25% | 3.25% | appreciation less 0.5pp |
 | Renters insurance | $25/mo | $30/mo | dollars, inflating |
 | Investment return | 7.5% gross | 7.5% gross | shared with Module 1 |
-| **Resulting breakeven** | **10.3 yr** | **never** | |
+| **Resulting breakeven** | **9.3 yr** | **never** | |
 
 **Why maintenance and insurance are dollars.** Charging them as a percentage of the current market value compounds upkeep with appreciation. That is empirically wrong (about 40% of a home's value is land, per FHFA 2022, and land needs no roof or premium; revealed spending has an elasticity to value of roughly 0.5, not 1.0) and it produced a perverse model in which higher appreciation *reduced* the buyer's net worth. Property tax is the exception and legitimately tracks market value.
 
@@ -313,14 +313,14 @@ This is a stronger lesson, not a weaker one: your rent already exceeds the mortg
 |---|---|---|
 | Cash to close | $48,000 | $46,200 |
 | P&I, flat | $2,313 | $2,227 |
-| Breakeven | month 124 (10.3 yr) | none within 50 years |
+| Breakeven | month 112 (9.3 yr) | none within 50 years |
 | Total interest, 30 yr | $472,845 | $455,113 |
 | Payment 1 principal / interest | $315 / $1,998 | $304 / $1,923 |
-| Property tax, year 1 | $4,414 (1.10%, flat) | $5,030 (1.31%, falling to 0.73%) |
+| Property tax, year 1 | $4,012 (1.00%, flat) | $5,030 (1.31%, falling to 0.73%) |
 | PMI | $114/mo, ends month 110 | $110/mo, ends month 110, $12,070 total |
 | Rent yr 1 → yr 50 | $2,300 → $11,352 | $2,200 → $10,858 |
-| Buyer NW yr 3 / 10 / 50 | $67,971 / $231,147 / $6,045,543 | $66,712 / $224,148 / $4,955,935 |
-| Renter NW yr 50 | $4,777,832 | $6,708,676 |
+| Buyer NW yr 3 / 10 / 50 | $67,971 / $231,147 / $6,240,721 | $66,712 / $224,148 / $4,955,935 |
+| Renter NW yr 50 | $4,597,064 | $6,708,676 |
 | Price to rent | 14.5x | 14.6x |
 
 The Module 2 suite asserts constraints, not only values, so a future edit cannot silently reintroduce the bug class that was just removed:
