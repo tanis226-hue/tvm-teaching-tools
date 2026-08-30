@@ -301,7 +301,7 @@ Both presets, $350,000 at 6.65%, 20% down, 30-year term:
 
 Buyer net worth is identical across presets in early years because the buyer invests nothing while their outlay exceeds the renter's. The preset difference surfaces in the renter's balance. This is correct behavior, not a bug, and the test suite should assert it deliberately.
 
-Slider sanity, Fort Myers preset: appreciation 2.0% → 9.3 yr, 5.0% → 2.8 yr; return 6.0% → 3.8 yr, 9.0% → 6.1 yr; rate 5.5% → 3.2 yr, 8.0% → 9.8 yr; 15-year term → 4.8 yr. The breakeven must remain responsive across this range, since watching it move is the entire point of the module.
+Slider sanity, Fort Myers preset: appreciation 2.0% → 12.9 yr, 5.0% → 3.2 yr; return 6.0% → 4.5 yr, 9.0% → 9.0 yr; rate 5.5% → 3.7 yr, 8.0% → 19.2 yr; 15-year term → 5.9 yr. The breakeven must remain responsive across this range, since watching it move is the entire point of the module.
 
 ## 7. Architecture
 
