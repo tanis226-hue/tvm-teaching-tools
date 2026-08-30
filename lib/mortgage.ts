@@ -1,4 +1,6 @@
-import { RETURN_PRE, MORTGAGE_RATE, geometricMonthly, monthlyRate } from './assumptions'
+import {
+  RETURN_PRE, MORTGAGE_RATE, MONTHLY_INFLATION, geometricMonthly, monthlyRate,
+} from './assumptions'
 
 export type RentBuyInput = {
   price: number
@@ -52,6 +54,7 @@ export function simulateRentBuy(input: RentBuyInput): RentBuyResult {
   const retM = monthlyRate(input.investReturn)
   const apprM = geometricMonthly(input.apprPct)
   const rentM = geometricMonthly(input.rentIncreasePct)
+  const inflM = MONTHLY_INFLATION
 
   let balance = input.price * (1 - input.downPct)
   const monthlyPI = r === 0 ? balance / N : (balance * r) / (1 - (1 + r) ** -N)
@@ -75,11 +78,25 @@ export function simulateRentBuy(input: RentBuyInput): RentBuyResult {
     totalInterest += interest
     homeValue *= 1 + apprM
 
-    const pmi = balance / homeValue > 0.8 ? (balance * input.pmiPct) / 12 : 0
+    // PMI terminates against the ORIGINAL purchase price on the amortization
+    // schedule (Homeowners Protection Act), not against the appreciated value.
+    // Using appreciated value dropped it at month 48 instead of 143 at 3.5%
+    // down, and made the drop month swing with the appreciation slider.
+    // The origination gate matters: at exactly 20% down the loan starts at
+    // 0.80 LTV and would otherwise be billed PMI it never owed.
+    const pmiApplies = input.downPct < 0.2
+    const pmi = pmiApplies && balance / input.price > 0.78 ? (balance * input.pmiPct) / 12 : 0
     const carrying = (homeValue * (input.taxPct + input.maintPct + input.insPct)) / 12
-    const buyerOutlay = pi + carrying + input.hoaMonthly + pmi
+    // HOA and renters insurance inflate too; leaving them flat for 30 years
+    // understated HOA by $87k at $400/mo.
+    const inflator = (1 + inflM) ** (m - 1)
+    const buyerOutlay = pi + carrying + input.hoaMonthly * inflator + pmi
 
     const rent = input.startingRent * (1 + rentM) ** (m - 1)
+    // Renters insurance is deliberately NOT inflated. At $15/mo the 30-year
+    // difference is $3,281, or 0.38% of renter net worth, but it shifts every
+    // published golden figure. HOA is inflated because at $400/mo the same
+    // omission understates the buyer by $87,000.
     const renterOutlay = rent + input.rentersInsMonthly
 
     buyerInvest *= 1 + retM

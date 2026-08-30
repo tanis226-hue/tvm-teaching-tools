@@ -240,7 +240,7 @@ A **Fort Myers / National** toggle swaps the entire default set. This makes the 
 | **Insurance** | **1.4%/yr of value** | **0.5%/yr** |
 | HOA | $0/mo | $0/mo |
 | Appreciation | 3.5%/yr | 3.5%/yr |
-| PMI | 0.5%/yr of balance, drops at 20% equity | same |
+| PMI | 0.5%/yr of balance | same |
 | **Starting rent** | **$2,500/mo** | **$2,200/mo** |
 | Rent increase | 3.0%/yr | 3.0%/yr |
 | Renters insurance | $15/mo | $15/mo |
@@ -253,6 +253,7 @@ Both land inside the PRD's required 5-8 year window.
 
 Apples-to-apples or the exercise is dishonest.
 
+- **PMI** applies only when the down payment is under 20%, and terminates when the balance reaches 78% of the **original purchase price** on the amortization schedule, per the Homeowners Protection Act. Terminating against the appreciated value instead (the original implementation) ended it at month 48 rather than 143 at 3.5% down, understated lifetime PMI by $11,846, and made the termination month move with the appreciation slider.
 - **Month 0:** buyer pays down payment plus purchase closing costs. Renter invests that identical sum at 7.5%.
 - **Each month:** buyer outlay is P&I + property tax + insurance + maintenance + HOA + PMI. Renter outlay is rent + renters insurance. Property tax, insurance and maintenance scale with the appreciating home value; P&I does not.
 - Whoever pays less that month invests the difference at 7.5%.
@@ -260,7 +261,7 @@ Apples-to-apples or the exercise is dishonest.
 - **Renter net worth** = investment balance.
 - **Breakeven** = first month buyer net worth exceeds renter net worth.
 
-Rent grows geometrically monthly, matching Module 1's convention.
+Rent grows geometrically monthly, matching Module 1's convention. HOA inflates at 3%/yr; renters insurance does not. That asymmetry is deliberate: HOA reaches $800/mo on its slider, where holding it flat for 30 years understates the buyer by $87,000, whereas renters insurance is $15/mo and inflating it would shift every published golden figure by 0.38% for no pedagogical gain.
 
 ### 6.3 A consequence worth planning for
 
@@ -273,8 +274,11 @@ This is a stronger lesson, not a weaker one: your rent already exceeds the mortg
 1. **Fixed payment vs rising rent.** P&I is a flat line; rent compounds. By year 30 rent is 2.42x its starting figure while P&I has not moved. Mark the total-outlay crossing.
 2. **Amortization split.** Principal vs interest per payment. Payment 1 is $246 principal against $1,552 interest: only 13.7% builds equity. Students are genuinely shocked, and more so when it reverses.
 3. **Net worth over time**, both paths, breakeven year marked.
-4. **Where the money went.** Stacked area for the buyer: interest, tax, maintenance, insurance (gone) vs principal (retained). A counterweight to any impression that buying is free money.
-5. **Cumulative cash out vs wealth retained**, both paths.
+4. **Cash out vs wealth kept, both paths.** Charts 4 and 5 of the PRD are merged into one frame: the buyer's consumed spend (interest, tax, upkeep, insurance, PMI, closing costs) as a stacked area against cumulative principal retained, with the renter's cumulative rent as a line on top.
+
+   Two decisions here, both made after the audit. The retained series plots **cumulative principal, not gross equity**: equity includes appreciation the buyer never paid for, and plotting it made green sit above red while the headline said the buyer was behind. And the buyer's consumed total is derived as `buyerOutlay - principal` rather than re-deriving the carrying costs, which is what silently dropped HOA from the original version.
+
+   They are merged rather than split because the renter's investment balance is seeded with the full down payment, so a standalone chart 5 would show the renter's retained wealth exceeding their cash out for the first four years, during exactly the window the module exists to teach.
 
 ### 6.5 Concept callouts
 

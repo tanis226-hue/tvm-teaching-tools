@@ -97,14 +97,61 @@ describe('breakeven stays responsive to the instructor sliders', () => {
 })
 
 describe('PMI', () => {
+  const low = simulateRentBuy({ ...FORT_MYERS, downPct: 0.035 })
+  const endMonth = (r: ReturnType<typeof simulateRentBuy>) =>
+    r.rows.filter(x => x.pmi > 0).at(-1)!.month
+
   it('is charged below 20% equity and drops once reached', () => {
-    const r = simulateRentBuy({ ...FORT_MYERS, downPct: 0.035 })
-    expect(r.rows[0].pmi).toBeGreaterThan(0)
-    expect(r.rows[359].pmi).toBe(0)
+    expect(low.rows[0].pmi).toBeGreaterThan(0)
+    expect(low.rows[359].pmi).toBe(0)
   })
   it('is never charged at 20% down', () => {
     const r = simulateRentBuy(FORT_MYERS)
     expect(r.rows.every(row => row.pmi === 0)).toBe(true)
+  })
+
+  // The previous two assertions passed under BOTH the correct rule and the
+  // bug that terminated PMI against the appreciated value. These three do not.
+  it('is still charged well past the month appreciation alone would clear it', () => {
+    expect(low.rows[99].pmi).toBeGreaterThan(0)
+  })
+  it('terminates at 78% of the ORIGINAL price, not the appreciated value', () => {
+    expect(endMonth(low)).toBe(143)
+  })
+  it('has a termination month independent of the appreciation slider', () => {
+    const flat = simulateRentBuy({ ...FORT_MYERS, downPct: 0.035, apprPct: 0 })
+    const hot = simulateRentBuy({ ...FORT_MYERS, downPct: 0.035, apprPct: 0.08 })
+    expect(endMonth(flat)).toBe(endMonth(hot))
+    expect(endMonth(flat)).toBe(endMonth(low))
+  })
+})
+
+describe('inputs that have no slider still drive the model', () => {
+  it('charges HOA and inflates it', () => {
+    const withHoa = simulateRentBuy({ ...FORT_MYERS, hoaMonthly: 400 })
+    expect(withHoa.rows[0].buyerOutlay - simulateRentBuy(FORT_MYERS).rows[0].buyerOutlay)
+      .toBeCloseTo(400, 0)
+    // month 360 HOA has inflated from 400 at 3%/yr
+    const late = withHoa.rows[359].buyerOutlay - simulateRentBuy(FORT_MYERS).rows[359].buyerOutlay
+    expect(late).toBeGreaterThan(900)
+  })
+  it('makes selling costs the lever the PRD says they are', () => {
+    const free = simulateRentBuy({ ...FORT_MYERS, closingSellPct: 0 })
+    expect(free.breakevenMonth!).toBeLessThan(simulateRentBuy(FORT_MYERS).breakevenMonth!)
+    expect(free.breakevenMonth!).toBe(23)
+  })
+  it('charges renters insurance every month', () => {
+    const none = simulateRentBuy({ ...FORT_MYERS, rentersInsMonthly: 0 })
+    expect(simulateRentBuy(FORT_MYERS).rows[0].renterOutlay - none.rows[0].renterOutlay)
+      .toBeCloseTo(15, 6)
+  })
+})
+
+describe('the hero sentence must not claim the buyer is behind when they are ahead', () => {
+  it('has a config where the buyer leads at three years', () => {
+    const r = simulateRentBuy({ ...FORT_MYERS, price: 150_000 })
+    expect(r.breakevenMonth).toBeLessThan(36)
+    expect(r.rows[35].buyerNetWorth).toBeGreaterThan(r.rows[35].renterNetWorth)
   })
 })
 
