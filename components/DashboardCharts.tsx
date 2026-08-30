@@ -1,0 +1,66 @@
+'use client'
+
+import {
+  Bar, BarChart, CartesianGrid, ResponsiveContainer, Scatter, ScatterChart,
+  Tooltip, XAxis, YAxis, ZAxis,
+} from 'recharts'
+import { histogram, INCOME_BUCKETS } from '@/lib/stats'
+import type { SubmissionRow } from '@/lib/db'
+import { usd } from '@/lib/format'
+
+const tipMoney = (v: unknown, name: unknown) =>
+  name === 'Monthly' ? usd(Number(v)) : String(v)
+
+export function DashboardCharts({ rows }: { rows: SubmissionRow[] }) {
+  const incomes = rows.map(r => Number(r.desired_income))
+  const buckets = histogram(incomes, INCOME_BUCKETS)
+  const scatter = rows.map(r => ({
+    x: Number(r.retirement_age),
+    y: Number(r.first_contribution),
+  }))
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <section className="rounded-2xl border-2 border-slate-300 bg-white p-6">
+        <h2 className="text-2xl font-bold text-slate-800">What the class wants to live on</h2>
+        <p className="mt-1 text-base text-slate-500">Desired monthly income, today&apos;s dollars.</p>
+        <div className="mt-4 h-80">
+          <ResponsiveContainer>
+            <BarChart data={buckets}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+              <XAxis dataKey="label" fontSize={18} />
+              <YAxis allowDecimals={false} fontSize={18} width={40} />
+              <Tooltip />
+              <Bar dataKey="count" name="Students" fill="#0f172a" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border-2 border-slate-300 bg-white p-6">
+        <h2 className="text-2xl font-bold text-slate-800">Retire earlier, save more</h2>
+        <p className="mt-1 text-base text-slate-500">
+          Each dot is one anonymous answer.
+        </p>
+        <div className="mt-4 h-80">
+          <ResponsiveContainer>
+            <ScatterChart>
+              <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+              <XAxis
+                type="number" dataKey="x" name="Retirement age"
+                domain={['dataMin - 2', 'dataMax + 2']} fontSize={18}
+              />
+              <YAxis
+                type="number" dataKey="y" name="Monthly"
+                tickFormatter={v => usd(v)} fontSize={18} width={80}
+              />
+              <ZAxis range={[120, 120]} />
+              <Tooltip formatter={tipMoney} />
+              <Scatter data={scatter} fill="#1d4ed8" />
+            </ScatterChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
+    </div>
+  )
+}
