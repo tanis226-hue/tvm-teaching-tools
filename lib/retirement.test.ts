@@ -3,7 +3,7 @@ import {
   solveRetirement, accumulationSeries, drawdownSeries,
   costOfWaiting, toTodaysDollars,
 } from './retirement'
-import { ESTATE_RESIDUAL } from './assumptions'
+import { ESTATE_RESIDUAL, INFLATION } from './assumptions'
 
 const near = (got: number, want: number, tol = 0.005) =>
   expect(Math.abs(got - want) / want).toBeLessThan(tol)
@@ -12,16 +12,16 @@ const BASE = { currentAge: 20, retirementAge: 65, desiredMonthlyIncome: 5000 }
 
 describe('published worked example: age 20, retire 65, $5,000/mo', () => {
   const r = solveRetirement(BASE)
-  it('inflates income to the retirement date', () => near(r.firstWithdrawal, 18908))
-  it('computes the lump sum', () => near(r.lumpSum, 4278724))
-  it('computes the first contribution', () => near(r.firstContribution, 644))
-  it('computes the final contribution', () => near(r.finalContribution, 2430))
-  it('computes total contributed', () => near(r.totalContributed, 726388))
+  it('inflates income to the retirement date', () => near(r.firstWithdrawal, 15190))
+  it('computes the lump sum', () => near(r.lumpSum, 3281473))
+  it('computes the first contribution', () => near(r.firstContribution, 531))
+  it('computes the final contribution', () => near(r.finalContribution, 1611))
+  it('computes total contributed', () => near(r.totalContributed, 525616))
 })
 
 describe('cost of waiting, retire 65, $5,000/mo', () => {
   const cases: [number, number][] =
-    [[20, 644], [25, 839], [30, 1107], [35, 1486], [40, 2042]]
+    [[20, 531], [25, 706], [30, 949], [35, 1296], [40, 1813]]
   it.each(cases)('start age %i requires $%i', (age, want) => {
     near(solveRetirement({ ...BASE, currentAge: age }).firstContribution, want)
   })
@@ -29,15 +29,15 @@ describe('cost of waiting, retire 65, $5,000/mo', () => {
   it('is exposed as a series by costOfWaiting', () => {
     const series = costOfWaiting(BASE, [20, 25, 30, 35, 40])
     expect(series.map(s => s.startAge)).toEqual([20, 25, 30, 35, 40])
-    near(series[0].contribution, 644)
-    near(series[4].contribution, 2042)
+    near(series[0].contribution, 531)
+    near(series[4].contribution, 1813)
   })
 })
 
 describe('retirement age sensitivity, age 20, $5,000/mo', () => {
   const cases: [number, number, number][] = [
-    [55, 4475000, 1556], [60, 4461945, 1015], [65, 4278724, 644],
-    [70, 3855055, 387], [75, 3095719, 209],
+    [55, 3525641, 1305], [60, 3467913, 844], [65, 3281473, 531],
+    [70, 2918151, 317], [75, 2313521, 170],
   ]
   it.each(cases)('retire at %i', (age, lump, pmt) => {
     const r = solveRetirement({ ...BASE, retirementAge: age })
@@ -48,21 +48,21 @@ describe('retirement age sensitivity, age 20, $5,000/mo', () => {
 
 describe('the shrinking million', () => {
   const cases: [number, number, number][] = [
-    [20, 553676, 1806111], [30, 411987, 2427262],
-    [40, 306557, 3262038], [45, 264439, 3781596],
+    [20, 610271, 1638616], [30, 476743, 2097568],
+    [40, 372431, 2685064], [45, 329174, 3037903],
   ]
   it.each(cases)('over %i years', (years, back, forward) => {
     near(toTodaysDollars(1_000_000, years), back)
-    near(1_000_000 * 1.03 ** years, forward)
+    near(1_000_000 * (1 + INFLATION) ** years, forward)
   })
 })
 
 describe('employer match is a post-solve split', () => {
-  const cases: [number, number][] = [[0, 644], [0.25, 515], [0.5, 429], [1, 322]]
+  const cases: [number, number][] = [[0, 531], [0.25, 425], [0.5, 354], [1, 266]]
   it.each(cases)('match %d leaves the student paying $%i', (rate, personal) => {
     const r = solveRetirement({ ...BASE, matchRate: rate })
     near(r.personalContribution, personal)
-    near(r.firstContribution, 644)
+    near(r.firstContribution, 531)
     near(r.personalContribution + r.employerContribution, r.firstContribution)
   })
 })
@@ -78,7 +78,7 @@ describe('accumulation series', () => {
   it('splits balance into contributed plus growth', () => {
     const last = series.at(-1)!
     near(last.contributed + last.growth, last.balance)
-    near(last.contributed, 726388)
+    near(last.contributed, 525616)
   })
   it('shows growth dominating contributions by the end', () => {
     expect(series.at(-1)!.growth).toBeGreaterThan(series.at(-1)!.contributed * 3)
@@ -93,7 +93,7 @@ describe('drawdown series', () => {
     expect(series).toHaveLength(r.monthsDrawing)
   })
   it('starts by withdrawing the inflated income', () => {
-    near(series[0].withdrawal, 18908)
+    near(series[0].withdrawal, 15190)
   })
   it('lands on the 10 percent nominal residual', () => {
     near(series.at(-1)!.balance, r.lumpSum * ESTATE_RESIDUAL)

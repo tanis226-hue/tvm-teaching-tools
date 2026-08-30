@@ -7,10 +7,10 @@ import {
 
 describe('locked class assumptions', () => {
   it('holds the values the spec publishes', () => {
-    expect(INFLATION).toBe(0.03)
+    expect(INFLATION).toBe(0.025)
     expect(RETURN_PRE).toBe(0.075)
     expect(RETURN_POST).toBe(0.04)
-    expect(MORTGAGE_RATE).toBe(0.0665)
+    expect(MORTGAGE_RATE).toBe(0.0666)
     expect(LIFE_EXPECTANCY).toBe(85)
     expect(ESTATE_RESIDUAL).toBe(0.1)
   })
@@ -21,8 +21,8 @@ describe('locked class assumptions', () => {
   })
 
   it('uses geometric monthly for inflation, not APR/12', () => {
-    expect(MONTHLY_INFLATION).toBeCloseTo(0.0024662698, 9)
-    expect(MONTHLY_INFLATION).not.toBeCloseTo(0.03 / 12, 6)
+    expect(MONTHLY_INFLATION).toBeCloseTo(0.0020598363, 9)
+    expect(MONTHLY_INFLATION).not.toBeCloseTo(0.025 / 12, 6)
   })
 
   it('compounds geometric monthly back to the annual rate', () => {
