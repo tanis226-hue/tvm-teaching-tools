@@ -162,3 +162,73 @@ describe('the PRD defaults that failed review', () => {
     expect(r.rows[359].buyerNetWorth).toBeLessThan(r.rows[359].renterNetWorth)
   })
 })
+
+describe('50-year horizon', () => {
+  const r = simulateRentBuy(FORT_MYERS)
+  it('runs 600 months', () => {
+    expect(r.rows).toHaveLength(600)
+    expect(r.rows.at(-1)!.month).toBe(600)
+  })
+  it('leaves the year-30 figures untouched at index 359', () => {
+    near(r.rows[359].buyerNetWorth, 1247769)
+    near(r.rows[359].rent, 6053)
+  })
+  it('stops P&I once the loan is repaid but keeps charging carrying costs', () => {
+    expect(r.rows[359].pi).toBeGreaterThan(0)
+    expect(r.rows[371].pi).toBe(0)
+    expect(r.rows[371].buyerOutlay).toBeGreaterThan(0)
+    expect(r.rows[371].buyerOutlay).toBeLessThan(r.rows[359].buyerOutlay)
+  })
+  it('does not let the longer horizon rig the comparison', () => {
+    // The buyer/renter ratio must stay stable, not run away, or the module
+    // becomes the "buying always wins" demo the PRD warned against.
+    const ratio = (m: number) => r.rows[m - 1].buyerNetWorth / r.rows[m - 1].renterNetWorth
+    expect(Math.abs(ratio(600) - ratio(360))).toBeLessThan(0.1)
+  })
+  it('still never breaks even on the original PRD defaults, even given 50 years', () => {
+    const prd = simulateRentBuy({ ...FORT_MYERS, startingRent: 1800, insPct: 0.005 })
+    expect(prd.breakevenMonth).toBeNull()
+    expect(prd.settledAheadMonth).toBeNull()
+  })
+})
+
+describe('back and forth: the paths can cross more than once', () => {
+  const single = simulateRentBuy(FORT_MYERS)
+  it('reports one crossing for the default preset', () => {
+    expect(single.crossings).toHaveLength(1)
+    expect(single.crossings[0]).toBe(single.breakevenMonth)
+    expect(single.settledAheadMonth).toBe(single.breakevenMonth)
+  })
+
+  // Found by sweeping the slider grid: 190 of 5,184 configurations re-cross.
+  const multi = simulateRentBuy({
+    ...FORT_MYERS, apprPct: 0.03, investReturn: 0.08, rate: 0.04,
+    startingRent: 2200, termYears: 15,
+  })
+  it('detects a configuration where the renter retakes the lead', () => {
+    expect(multi.crossings.length).toBeGreaterThan(1)
+  })
+  // This is the case that used to be reported as a flat "pulls ahead in year
+  // 5.3": the buyer leads from 5.3, the renter retakes the lead at 23.3 and
+  // holds it for the remaining 27 years.
+  it('reports no settled lead when the renter takes it back for good', () => {
+    expect(multi.breakevenMonth).not.toBeNull()
+    expect(multi.settledAheadMonth).toBeNull()
+  })
+  it('is ahead between the crossings and behind after the last one', () => {
+    const [first, last] = [multi.crossings[0], multi.crossings.at(-1)!]
+    const mid = Math.round((first + last) / 2)
+    expect(multi.rows[mid - 1].buyerNetWorth).toBeGreaterThan(multi.rows[mid - 1].renterNetWorth)
+    expect(multi.rows.at(-1)!.buyerNetWorth).toBeLessThan(multi.rows.at(-1)!.renterNetWorth)
+  })
+  it('never reports settledAhead when the buyer ends behind', () => {
+    const losing = simulateRentBuy({ ...FORT_MYERS, startingRent: 1800, insPct: 0.005 })
+    expect(losing.settledAheadMonth).toBeNull()
+  })
+  it('always has settledAhead at or after the first crossing when both exist', () => {
+    for (const p of [FORT_MYERS, NATIONAL]) {
+      const r = simulateRentBuy(p)
+      expect(r.settledAheadMonth!).toBeGreaterThanOrEqual(r.breakevenMonth!)
+    }
+  })
+})

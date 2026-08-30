@@ -40,13 +40,26 @@ export type MonthRow = {
 export type RentBuyResult = {
   monthlyPI: number
   upfront: number
+  /** First month the buyer's net worth exceeds the renter's. */
   breakevenMonth: number | null
+  /**
+   * Every month the lead changes hands. In 3.7% of slider configurations the
+   * paths cross more than once, and reporting only `breakevenMonth` announced
+   * "buying pulls ahead in year 5.2" for a case where the renter retook the
+   * lead at year 16.6 and kept it.
+   */
+  crossings: number[]
+  /** Month after which the buyer leads for the rest of the horizon, if ever. */
+  settledAheadMonth: number | null
   outlayCrossingMonth: number | null
   totalInterest: number
   rows: MonthRow[]
 }
 
-const HORIZON_MONTHS = 360
+// 50 years, not 30. The mortgage is gone at year 30 while rent keeps
+// compounding, and that divergence is the whole back half of the lesson.
+const HORIZON_MONTHS = 600
+export const HORIZON_YEARS = HORIZON_MONTHS / 12
 
 export function simulateRentBuy(input: RentBuyInput): RentBuyResult {
   const r = monthlyRate(input.rate)
@@ -66,6 +79,8 @@ export function simulateRentBuy(input: RentBuyInput): RentBuyResult {
   let totalInterest = 0
   let breakevenMonth: number | null = null
   let outlayCrossingMonth: number | null = null
+  const crossings: number[] = []
+  let prevAhead: boolean | null = null
   const rows: MonthRow[] = []
 
   for (let m = 1; m <= HORIZON_MONTHS; m++) {
@@ -109,7 +124,10 @@ export function simulateRentBuy(input: RentBuyInput): RentBuyResult {
     const buyerNetWorth = homeValue - balance - homeValue * input.closingSellPct + buyerInvest
     const renterNetWorth = renterInvest
 
-    if (breakevenMonth === null && buyerNetWorth > renterNetWorth) breakevenMonth = m
+    const ahead = buyerNetWorth > renterNetWorth
+    if (breakevenMonth === null && ahead) breakevenMonth = m
+    if (prevAhead !== null && ahead !== prevAhead) crossings.push(m)
+    prevAhead = ahead
     if (outlayCrossingMonth === null && renterOutlay > buyerOutlay) outlayCrossingMonth = m
 
     rows.push({
@@ -119,7 +137,18 @@ export function simulateRentBuy(input: RentBuyInput): RentBuyResult {
     })
   }
 
-  return { monthlyPI, upfront, breakevenMonth, outlayCrossingMonth, totalInterest, rows }
+  // Walk back from the end: the buyer "settles ahead" at the month after the
+  // last time they were behind.
+  let settledAheadMonth: number | null = null
+  for (let idx = rows.length - 1; idx >= 0; idx--) {
+    if (rows[idx].buyerNetWorth <= rows[idx].renterNetWorth) break
+    settledAheadMonth = rows[idx].month
+  }
+
+  return {
+    monthlyPI, upfront, breakevenMonth, crossings, settledAheadMonth,
+    outlayCrossingMonth, totalInterest, rows,
+  }
 }
 
 const SHARED = {

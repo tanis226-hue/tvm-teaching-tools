@@ -261,6 +261,10 @@ Apples-to-apples or the exercise is dishonest.
 - **Renter net worth** = investment balance.
 - **Breakeven** = first month buyer net worth exceeds renter net worth.
 
+**Crossings, added after review.** Reporting only the first crossing is wrong in 190 of 5,184 slider configurations (3.7%), where the paths cross more than once. In the worst case the tool announced "buying pulls ahead in year 5.3" for a run where the renter retook the lead in year 23.3 and held it for the remaining 27 years. The result therefore also carries `crossings` (every month the lead changes hands) and `settledAheadMonth` (the month after the last time the buyer is behind, or null). The headline reports **where the buyer stays ahead**, and names the four outcomes separately: never ahead, cleanly ahead, ahead after several swaps, and ahead in the middle but behind at the end.
+
+**Horizon is 50 years, not 30.** The mortgage is gone at year 30 while rent keeps compounding, and that divergence is the back half of the lesson: the buyer's monthly outlay drops from $4,663 to $2,966 at year 31 while rent climbs from $6,053 to $10,933 by year 50. Extending it does not rig the comparison, which was the PRD's stated fear: the Fort Myers buyer/renter ratio is 1.44x at year 30 and 1.41x at year 50, and the original PRD defaults still never break even even given 50 years. Year-30 figures remain at row index 359, so every published golden is unaffected.
+
 Rent grows geometrically monthly, matching Module 1's convention. HOA inflates at 3%/yr; renters insurance does not. That asymmetry is deliberate: HOA reaches $800/mo on its slider, where holding it flat for 30 years understates the buyer by $87,000, whereas renters insurance is $15/mo and inflating it would shift every published golden figure by 0.38% for no pedagogical gain.
 
 ### 6.3 A consequence worth planning for
