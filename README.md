@@ -24,7 +24,7 @@ npm run dev
 Module 2 and all the math run with no configuration. Only Module 1's class aggregation needs a database.
 
 ```bash
-npm test        # 88 tests, including every published worked example
+npm test        # 104 tests: published worked examples plus model constraints
 npm run build
 ```
 
@@ -91,19 +91,52 @@ The three moments land in a fixed order and the UI enforces it: the inflated inc
 
 ## Before each semester
 
-Three numbers go stale. All three live in exactly two files.
+Every default was sourced on **2026-08-30**. The three that go stale fastest are the two
+market rates and the local rent.
 
-| Assumption | Check against | Edit in |
-|---|---|---|
-| Retirement return, 4.0% | 1-year Treasury, Fed H.15 | `lib/assumptions.ts` |
-| Mortgage rate, 6.65% | Freddie Mac PMMS 30-year | `lib/assumptions.ts` |
-| Rent and insurance | Local listings, current premiums | `lib/mortgage.ts` presets |
+| Assumption | Value | Source | Where |
+|---|---|---|---|
+| Inflation | 2.5% | CPI-U realized 1996-2026 2.56%; Phila. Fed SPF 10-yr 2.30% | `lib/assumptions.ts` |
+| Mortgage rate, 30 / 15 yr | 6.66% / 5.98% | Freddie Mac PMMS, 2026-08-27 | `lib/assumptions.ts` |
+| Retirement return | 4.0% | 1-year Treasury 4.04%, 2026-08-27 | `lib/assumptions.ts` |
+| Investment return | 7.5% gross | Damodaran 1928-2025 10.2% nominal; Vanguard VCMM 3.9-5.9% next 10yr | `lib/assumptions.ts` |
+| Home appreciation | 3.75% | FHFA 1975-2026 real 1.26%; inflation + 1.25pp | `lib/mortgage.ts` |
+| Rent growth | 3.25% | BLS rent of primary residence, ~0.9pp over CPI | `lib/mortgage.ts` |
+| FM price / rent | $385,000 / $2,200 | FGCU RERI Jul 2026; Zillow ZORI SFR 2026-07-31 | `lib/mortgage.ts` |
+| NAT price / rent | $400,000 / $2,300 | Zillow ZORI SFR US, 2026-07-31 | `lib/mortgage.ts` |
+| FM maintenance / insurance / flood | $4,200 / $3,576 / $1,975 per yr | JCHS 2025 (2023 AHS); FLOIR Jul 2026; FEMA NFIP Lee County | `lib/mortgage.ts` |
+| PMI | 0.38%/yr of original loan | Enact national BPMI card, upd. 2025-07-17 | `lib/mortgage.ts` |
+| Seller closing costs | 6.7% FM / 7.0% NAT | Redfin Q3 2025 commissions 5.25%; FL doc stamps + title | `lib/mortgage.ts` |
 
-Last verified 2026-08-30: 1-year Treasury 4.02%, Freddie Mac 30-year 6.66%, Fort Myers median sale price $348K.
+Two National figures are **estimates, not sourced**: property tax 1.10% and homeowners
+insurance $2,000/yr. US effective tax rates run from about 0.3% to over 2%, so a single
+national number is a convenience. Say so if a student asks.
 
-After changing any of them, run `npm test`. The Module 2 suite asserts that both presets still break even inside the 5 to 8 year window, which is the constraint that makes the module teachable. If that test fails, the defaults need retuning, not the test.
+After changing anything, run `npm test`. The Module 2 suite asserts *constraints*, not just
+values, and those are the ones that matter:
 
-Rent-to-price ratio is the lever that controls breakeven, not the mortgage rate. At $1,800/mo against a $350K home, buying never breaks even at any rate from 6% to 7.5%. At $2,200 it breaks even at 6.2 years. Every $100/mo of rent moves breakeven roughly a year in that range.
+- Lifetime maintenance and insurance must be identical at 3.75% and 8% appreciation.
+- Buyer net worth must increase monotonically with appreciation.
+- Property tax must be the only cost that tracks market value.
+- PMI must terminate and never be charged at 20% down.
+- Price-to-rent must stay within 10-22x.
+
+## What the Fort Myers preset says
+
+With sourced 2026 inputs, **buying in Lee County does not break even within 50 years.** Not
+at 20% down, not with flood excluded. The buyer pays $3,568/mo against $2,230 of rent, a
+$1,338 gap sustained for 247 months, because Lee County carrying costs are 3.84% of price
+per year (tax 1.30 + maintenance 1.09 + homeowners 0.93 + flood 0.51). Price-to-rent is
+14.6x, mid-band for the market, so this is not an artefact of a bad rent figure.
+
+That is why **National opens the lesson** (breakeven 10.3 years, 8.1 at 20% down) and Fort
+Myers is the second act. The contrast is the teaching moment: the same arithmetic, the same
+decision, a different answer because of where you live.
+
+Two honest caveats to raise in class if they come up. The model compares a *pre-tax*
+brokerage return against a home gain that is tax-free up to $250,000 under IRC §121; drag
+the return to about 6.5% for the after-tax version. And it assumes the renter invests every
+dollar of the difference every month and never spends it, which almost nobody does.
 
 ## Layout
 

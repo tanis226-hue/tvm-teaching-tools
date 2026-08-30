@@ -8,8 +8,10 @@
 golden test fails, the implementation is wrong, not the test. Never edit an expected
 value to make a test pass without recomputing the source figure first and saying so.
 
-- Returns are **APR/12** (`rate / 12`). Inflation and every 3%/yr growth series are
-  **geometric monthly** (`(1.03)**(1/12) - 1`). Mixing them changes published answers.
+- Returns are **APR/12** (`rate / 12`). Inflation and every growth series are
+  **geometric monthly** (`(1 + rate)**(1/12) - 1`). Mixing them changes published answers.
+- **Inflation is 2.5%**, not 3%. It was moved on 2026-08-30 and that re-based every
+  Module 1 figure. The worked example is $15,190 / $3,281,473 / $531.
 - Estate residual is **nominal**: 10% of lump sum `L` at age 85.
 - Contributions and withdrawals grow geometrically **every month**, never in annual steps.
 
@@ -68,6 +70,22 @@ Stop the dev server before `netlify deploy`. A running `next dev` holds files in
 `rm -rf .next` first if a deploy has already failed.
 
 ## Module 2 rules
+
+- **Never charge maintenance, insurance, HOA or renters insurance against `homeValue[t]`.**
+  They are year-1 dollar costs grown at inflation. Charging them on an appreciating value
+  made higher appreciation *reduce* the buyer's net worth and billed $108,489/yr to
+  maintain a house worth ~$650k to rebuild. About 40% of a home's value is land. There is a
+  test asserting lifetime upkeep is identical at 3.75% and 8% appreciation; do not weaken it.
+- **Property tax is the only cost that may touch `homeValue[t]`.** Florida additionally
+  models the homestead exemptions and the Save Our Homes cap, so its effective rate falls
+  from 1.31% to 0.73% over 50 years.
+- Rates are **spreads over inflation**, not free-floating constants: appreciation =
+  inflation + 1.25pp, rent growth = appreciation - 0.5pp. Free constants are how the
+  original bug got in.
+- **The Fort Myers preset does not break even, on purpose.** It is sourced, not broken. If
+  a change makes it break even, something got optimistic; check what.
+- PMI rides the **original loan amount** and terminates at 78% LTV of the **original price**.
+- The 15-year term must carry its own rate (5.98%), not the 30-year rate.
 
 - The money-gone series must derive from `buyerOutlay - principal`, never from a
   re-derivation of the carrying costs. Re-deriving it is what silently dropped HOA.

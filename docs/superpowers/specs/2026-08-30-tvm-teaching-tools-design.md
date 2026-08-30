@@ -2,7 +2,14 @@
 
 **Date:** 2026-08-30
 **Course:** Business Mathematics (first-semester freshmen), FGCU
-**Status:** Implemented. Sections 5.7 and 7.2 were revised during implementation; both revisions are marked inline.
+**Status:** Implemented, then substantially revised on 2026-08-30 after a defaults audit.
+
+> **Revision 2, 2026-08-30.** Two changes re-base almost every number below.
+>
+> 1. **Inflation moved from 3.0% to 2.5%** (CPI-U realized 1996-2026 is 2.56%; Philadelphia Fed SPF 10-year expectation 2.30%). Every Module 1 figure changed as a result. The published worked example is now **$15,190 / $3,281,473 / $531**, not $18,908 / $4,278,724 / $644. Section 5.6 carries the current values.
+> 2. **Maintenance and insurance are no longer percentages of market value.** They are year-1 dollar costs growing with inflation. Charging them on an appreciating value made higher appreciation *reduce* the buyer's net worth, and billed $108,489/yr to maintain a house worth ~$650k to rebuild. Property tax is the only cost that still tracks market value, and for Florida it now models the homestead exemptions and the Save Our Homes cap.
+>
+> Every Module 2 default was re-sourced at the same time. Section 6.1 is current; the historical rationale in section 3.2 describes the previous retune and is kept for the reasoning, not the numbers.
 
 ---
 
@@ -12,8 +19,8 @@ Two web tools that make the time value of money concrete.
 
 **Module 1 (Retirement Calculator)** must deliver three moments in strict order:
 
-1. **The shrinking million.** $1M in 45 years is worth $264,439 today.
-2. **The cost of waiting.** Starting at 30 instead of 20 nearly doubles the required contribution ($644 to $1,107).
+1. **The shrinking million.** $1M in 45 years is worth $329,174 today.
+2. **The cost of waiting.** Starting at 30 instead of 20 nearly doubles the required contribution ($531 to $949).
 3. **The relief.** After two intimidating numbers, the monthly figure is smaller than students feared.
 
 **Module 2 (Rent vs Buy Explorer)** shows that buying a home is a bundle of financial mechanics (amortization, equity, payment lock-in, forced savings, transaction costs), not an aesthetic decision. It surfaces a breakeven year and lets sliders move it. It never declares a winner.
@@ -29,6 +36,8 @@ Two web tools that make the time value of money concrete.
 - Cross-module linking (home equity at 65 feeding the retirement picture). Conceptually attractive, too much for one semester.
 
 ## 3. Corrections to the source PRD
+
+> **Historical.** This section records the first review, done at 3.0% inflation and against the original PRD defaults. The figures in it are the *then*-current ones and are deliberately not updated; the reasoning is what matters. Current values are in sections 5.6 and 6.6.
 
 Two errors were found and resolved during design. Both are recorded here so the reasoning is not lost.
 
@@ -89,7 +98,7 @@ Both modules import a single module so assumptions cannot drift.
 
 ```ts
 // lib/assumptions.ts
-export const INFLATION      = 0.03;   // annual, applied geometric monthly
+export const INFLATION      = 0.025;  // annual, applied geometric monthly
 export const RETURN_PRE     = 0.075;  // pre-retirement and renter investment, APR/12
 export const RETURN_POST    = 0.040;  // during retirement, APR/12
 export const MORTGAGE_RATE  = 0.0665; // Module 2 default only, user-adjustable
@@ -116,7 +125,7 @@ Student-adjustable:
 | Desired monthly income, today's dollars | $500-$50,000 | $5,000 |
 | Employer match | 0 / 25 / 50 / 100% presets | 0% |
 
-Locked and displayed but not editable: inflation 3.0%, pre-retirement return 7.5%, retirement return 4.0%, life expectancy 85, estate residual 10%, withdrawal growth 3.0%/yr, contribution growth 3.0%/yr.
+Locked and displayed but not editable: inflation 2.5%, pre-retirement return 7.5%, retirement return 4.0%, life expectancy 85, estate residual 10%, withdrawal growth 2.5%/yr, contribution growth 2.5%/yr.
 
 Locking these is what makes the aggregated class data comparable. Only the student inputs vary.
 
@@ -124,10 +133,10 @@ Validation: `retirement_age > current_age` by at least 1 year. Clamp rather than
 
 ### 5.2 Calculation
 
-Let `i = 0.04/12`, `ip = 0.075/12`, `g = (1.03)^(1/12) - 1`, `N` = months saving, `n` = months drawing down.
+Let `i = 0.04/12`, `ip = 0.075/12`, `g = (1.025)^(1/12) - 1`, `N` = months saving, `n` = months drawing down.
 
 ```
-Step 1  P  = income_today * (1.03)^(retirement_age - current_age)
+Step 1  P  = income_today * (1.025)^(retirement_age - current_age)
 Step 2  PV = P / (i - g) * [ 1 - ((1+g)/(1+i))^n ]
         L  = PV / ( 1 - 0.10 / (1+i)^n )
 Step 3  FV_factor = [ (1+ip)^N - (1+g)^N ] / (ip - g)
@@ -136,7 +145,7 @@ Step 3  FV_factor = [ (1+ip)^N - (1+g)^N ] / (ip - g)
 
 `PMT1` is the first month's contribution, growing at `g` monthly thereafter.
 
-**Edge case:** the growing-annuity formula divides by `(i - g)`. With locked rates (4.0% vs 3.0%) this is safe. Guard it anyway with an explicit check, since the guard is two lines and a future editable-rates feature would otherwise divide by zero silently.
+**Edge case:** the growing-annuity formula divides by `(i - g)`. With locked rates (4.0% vs 2.5%) this is safe. Guard it anyway with an explicit check, since the guard is two lines and a future editable-rates feature would otherwise divide by zero silently.
 
 ### 5.3 Employer match
 
@@ -149,10 +158,10 @@ employer_contribution = PMT1 - personal_contribution
 
 | Match | You pay | Employer pays |
 |---|---|---|
-| 0% | $644 | $0 |
-| 25% | $515 | $129 |
-| 50% | $429 | $215 |
-| 100% | $322 | $322 |
+| 0% | $531 | $0 |
+| 25% | $425 | $106 |
+| 50% | $354 | $177 |
+| 100% | $266 | $266 |
 
 Two reasons for this design. It keeps `PMT1` comparable across all students so the class histogram stays meaningful regardless of who set a match. And it dodges the salary problem: a real employer match is "50% up to 6% of salary" and there is no salary input, so a flat contribution multiplier is the honest simplification. Label it on screen as a simplification.
 
@@ -160,11 +169,11 @@ Two reasons for this design. It keeps `PMT1` comparable across all students so t
 
 Non-negotiable sequence. The intimidating numbers must land before the reassuring one.
 
-1. **Inflated income, prominent and immediate.** "$5,000/mo today = $18,908/mo at 65."
-2. **Lump sum needed.** $4,278,724.
-3. **Monthly contribution.** $644, then the match split if set.
+1. **Inflated income, prominent and immediate.** "$5,000/mo today = $15,190/mo at 65."
+2. **Lump sum needed.** $3,281,473.
+3. **Monthly contribution.** $531, then the match split if set.
 
-Every nominal figure shows its today's-dollars equivalent alongside. Total contributed ($726,388) and total accumulated ($4,278,724) appear side by side, with the gap labeled explicitly as compounding.
+Every nominal figure shows its today's-dollars equivalent alongside. Total contributed ($525,616) and total accumulated ($3,281,473) appear side by side, with the gap labeled explicitly as compounding.
 
 ### 5.5 Charts
 
@@ -181,25 +190,25 @@ Age 20, retire 65, $5,000/mo:
 
 | Output | Value |
 |---|---|
-| First monthly withdrawal at 65 | $18,908 |
-| Lump sum needed | $4,278,724 |
-| First monthly contribution | $644 |
-| Final monthly contribution | $2,430 |
-| Total contributed | $726,388 |
+| First monthly withdrawal at 65 | $15,190 |
+| Lump sum needed | $3,281,473 |
+| First monthly contribution | $531 |
+| Final monthly contribution | $1,611 |
+| Total contributed | $525,616 |
 
-Cost of waiting (retire 65, $5,000/mo): age 20 → $644, 25 → $839, 30 → $1,107, 35 → $1,486, 40 → $2,042.
+Cost of waiting (retire 65, $5,000/mo): age 20 → $531, 25 → $706, 30 → $949, 35 → $1,296, 40 → $1,813.
 
 Retirement age sensitivity (age 20, $5,000/mo):
 
 | Retire at | Lump sum | Contribution |
 |---|---|---|
-| 55 | $4,475,000 | $1,556 |
-| 60 | $4,461,945 | $1,015 |
-| 65 | $4,278,724 | $644 |
-| 70 | $3,855,055 | $387 |
-| 75 | $3,095,719 | $209 |
+| 55 | $3,525,641 | $1,305 |
+| 60 | $3,467,913 | $844 |
+| 65 | $3,281,473 | $531 |
+| 70 | $2,918,151 | $317 |
+| 75 | $2,313,521 | $170 |
 
-Shrinking million: 20 yr → $553,676 / $1,806,111; 30 yr → $411,987 / $2,427,262; 40 yr → $306,557 / $3,262,038; 45 yr → $264,439 / $3,781,596.
+Shrinking million: 20 yr → $610,271 / $1,638,616; 30 yr → $476,743 / $2,097,568; 40 yr → $372,431 / $2,685,064; 45 yr → $329,174 / $3,037,903.
 
 Tolerance: 0.5%.
 
@@ -225,29 +234,35 @@ The hash is a random UUID minted on first visit and kept in `localStorage`, then
 
 ### 6.1 Two presets
 
-A **Fort Myers / National** toggle swaps the entire default set. This makes the sensitivity lesson vivid: the same decision flips depending on where you live.
+A **National / Fort Myers** toggle swaps the entire default set. National opens the lesson because it breaks even; Fort Myers is the second act, and with sourced Lee County inputs it does not.
 
-| Input | Fort Myers | National |
-|---|---|---|
-| Home price | $350,000 | $350,000 |
-| Down payment | 20% (presets 3.5 / 5 / 10 / 20) | same |
-| Mortgage rate | 6.65% | 6.65% |
-| Term | 30 yr (15-yr toggle) | same |
-| Closing costs, purchase | 3% of price | same |
-| Closing costs, sale | 6% of sale price | same |
-| Property tax | 1.1%/yr of value | 1.1%/yr |
-| Maintenance | 1.0%/yr of value | 1.0%/yr |
-| **Insurance** | **1.4%/yr of value** | **0.5%/yr** |
-| HOA | $0/mo | $0/mo |
-| Appreciation | 3.5%/yr | 3.5%/yr |
-| PMI | 0.5%/yr of balance | same |
-| **Starting rent** | **$2,500/mo** | **$2,200/mo** |
-| Rent increase | 3.0%/yr | 3.0%/yr |
-| Renters insurance | $15/mo | $15/mo |
-| Investment return | 7.5%/yr | 7.5%/yr |
-| **Resulting breakeven** | **5.7 yr** | **6.2 yr** |
+Every value below was sourced on 2026-08-30. Full citations are in the README.
 
-Both land inside the PRD's required 5-8 year window.
+| Input | National | Fort Myers | Base |
+|---|---|---|---|
+| Home price | $400,000 | $385,000 | purchase price |
+| Down payment | 10% (presets 3.5 / 5 / 10 / 20) | same | NAR 2025 median first-time buyer |
+| Mortgage rate | 6.66% (15-yr toggle carries 5.98%) | same | Freddie Mac PMMS 2026-08-27 |
+| Closing costs, purchase | 2% of price | 2% | excludes prepaids and escrow |
+| Closing costs, sale | 7.0% | 6.7% | applied to the appreciated sale price |
+| Property tax | flat 1.10% of market value | Florida homestead + Save Our Homes | see below |
+| **Maintenance** | **$4,100/yr** | **$4,200/yr** | **dollars, inflating. Never market value** |
+| **Homeowners insurance** | **$2,000/yr** | **$3,576/yr** | **dollars, inflating** |
+| **Flood insurance** | off | **$1,975/yr**, toggleable | 75% of Lee County SF flood policies are in a mapped zone |
+| HOA | $0/mo, inflating | same | |
+| Appreciation | 3.75% | 3.75% | inflation + 1.25pp real |
+| PMI | 0.38%/yr of the **original loan** | same | terminates at 78% LTV of original price |
+| Starting rent | $2,300/mo | $2,200/mo | Zillow ZORI single-family, 2026-07-31 |
+| Rent increase | 3.25% | 3.25% | appreciation less 0.5pp |
+| Renters insurance | $25/mo | $30/mo | dollars, inflating |
+| Investment return | 7.5% gross | 7.5% gross | shared with Module 1 |
+| **Resulting breakeven** | **10.3 yr** | **never** | |
+
+**Why maintenance and insurance are dollars.** Charging them as a percentage of the current market value compounds upkeep with appreciation. That is empirically wrong (about 40% of a home's value is land, per FHFA 2022, and land needs no roof or premium; revealed spending has an elasticity to value of roughly 0.5, not 1.0) and it produced a perverse model in which higher appreciation *reduced* the buyer's net worth. Property tax is the exception and legitimately tracks market value.
+
+**Florida property tax.** Assessed value resets to the purchase price at sale, then grows at min(CPI, 3%) under Save Our Homes. The $25,000 homestead exemption applies to all levies and a CPI-indexed second exemption ($26,411 in 2026) to non-school levies. On the Fort Myers preset this is $5,030 in year 1, **1.31% of market value, falling to 0.73% by year 50** as the cap bites. A flat rate cannot represent a 1.8x spread, which is why the National preset's flat 1.10% is capped in usefulness at about 30 years.
+
+**Fort Myers does not break even, and that is the finding.** The buyer pays $3,568/mo against $2,230 of rent, a gap of $1,338/mo sustained for 247 months. Lee County carrying costs are 3.84% of price per year (tax 1.30 + maintenance 1.09 + homeowners 0.93 + flood 0.51). Price-to-rent is 14.6x, mid-band for the market, so this is not a bad rent figure. It is what SW Florida costs in 2026. This conflicts with the PRD's 5-8 year design target; the resolution is pedagogical, not numerical: National opens the lesson, Fort Myers is the contrast.
 
 ### 6.2 Comparison mechanic
 
@@ -269,7 +284,7 @@ Rent grows geometrically monthly, matching Module 1's convention. HOA inflates a
 
 ### 6.3 A consequence worth planning for
 
-At realistic rent, the PRD's chart 1 no longer crosses. Rent ($2,500) starts above P&I ($1,798) and diverges from month 1.
+At realistic rent, the PRD's chart 1 no longer crosses. Rent ($2,300 National) starts above P&I on the carrying-cost comparison and the all-in lines diverge from month 1.
 
 This is a stronger lesson, not a weaker one: your rent already exceeds the mortgage payment on the same house, and the gap only widens. Plot P&I flat against rent rising to show the divergence, and separately mark the **total outlay crossing** at year 7.3 (Fort Myers) or 8.1 (National). That crossing is the honest one, and it is the one that drives the invest-the-difference mechanic.
 
@@ -294,24 +309,28 @@ This is a stronger lesson, not a weaker one: your rent already exceeds the mortg
 
 ### 6.6 Golden test values
 
-Both presets, $350,000 at 6.65%, 20% down, 30-year term:
-
-| | Fort Myers | National |
+| | National | Fort Myers |
 |---|---|---|
-| Upfront cash | $80,500 | $80,500 |
-| P&I, flat 30 yrs | $1,798 | $1,798 |
-| Breakeven | month 68 (5.7 yr) | month 74 (6.2 yr) |
-| Total interest | $367,101 | $367,101 |
-| Payment 1 principal / interest | $246 / $1,552 | $246 / $1,552 |
-| Total outlay crossing | yr 7.3 | yr 8.1 |
-| Rent yr 1 → yr 30 | $2,500 → $6,053 | $2,200 → $5,327 |
-| Equity at yr 5 / 10 / 30 | $153,132 / $255,450 / $982,378 | same |
-| Buyer NW at yr 3 / 10 / 30 | $94,533 / $228,099 / $1,247,769 | $94,533 / $227,078 / $1,231,894 |
-| Renter NW at yr 3 / 10 / 30 | $110,827 / $194,443 / $867,374 | $112,292 / $199,677 / $890,722 |
+| Cash to close | $48,000 | $46,200 |
+| P&I, flat | $2,313 | $2,227 |
+| Breakeven | month 124 (10.3 yr) | none within 50 years |
+| Total interest, 30 yr | $472,845 | $455,113 |
+| Payment 1 principal / interest | $315 / $1,998 | $304 / $1,923 |
+| Property tax, year 1 | $4,414 (1.10%, flat) | $5,030 (1.31%, falling to 0.73%) |
+| PMI | $114/mo, ends month 110 | $110/mo, ends month 110, $12,070 total |
+| Rent yr 1 → yr 50 | $2,300 → $11,352 | $2,200 → $10,858 |
+| Buyer NW yr 3 / 10 / 50 | $67,971 / $231,147 / $6,045,543 | $66,712 / $224,148 / $4,955,935 |
+| Renter NW yr 50 | $4,777,832 | $6,708,676 |
+| Price to rent | 14.5x | 14.6x |
 
-Buyer net worth is identical across presets in early years because the buyer invests nothing while their outlay exceeds the renter's. The preset difference surfaces in the renter's balance. This is correct behavior, not a bug, and the test suite should assert it deliberately.
+The Module 2 suite asserts constraints, not only values, so a future edit cannot silently reintroduce the bug class that was just removed:
 
-Slider sanity, Fort Myers preset: appreciation 2.0% → 12.9 yr, 5.0% → 3.2 yr; return 6.0% → 4.5 yr, 9.0% → 9.0 yr; rate 5.5% → 3.7 yr, 8.0% → 19.2 yr; 15-year term → 5.9 yr. The breakeven must remain responsive across this range, since watching it move is the entire point of the module.
+- Lifetime maintenance and insurance must be **identical** at 3.75% and 8% appreciation.
+- Buyer net worth must **increase monotonically** with appreciation.
+- Property tax must be the **only** cost that varies with market value.
+- PMI must terminate, be constant month to month, and never be charged at 20% down.
+- Price-to-rent must stay within 10-22x for every preset.
+- Appreciation must exceed inflation by 0.5 to 2.0pp, and rent growth must sit 0.5pp below appreciation.
 
 ## 7. Architecture
 

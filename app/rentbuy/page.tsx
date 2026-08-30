@@ -18,19 +18,22 @@ const perYear = (n: number) => `${usd(n)}/yr`
 
 type PresetName = keyof typeof PRESETS
 
+// National opens the lesson because it breaks even at 10.3 years, giving the
+// class a working baseline. Fort Myers is the second act: with sourced Lee
+// County inputs it never breaks even, and that contrast is the lesson.
 const PRESET_LABELS: [PresetName, string][] = [
-  ['fortMyers', 'Fort Myers'],
   ['national', 'National'],
+  ['fortMyers', 'Fort Myers'],
 ]
 
 const sameAsPreset = (a: RentBuyInput, b: RentBuyInput) =>
   (Object.keys(b) as (keyof RentBuyInput)[]).every(k => a[k] === b[k])
 
 export default function RentBuyPage() {
-  const [input, setInput] = useState<RentBuyInput>(PRESETS.fortMyers)
+  const [input, setInput] = useState<RentBuyInput>(PRESETS.national)
   // Which preset Reset returns to. Distinct from activePreset below, which asks
   // whether the inputs STILL match a preset and drives the chip highlight.
-  const [lastPreset, setLastPreset] = useState<PresetName>('fortMyers')
+  const [lastPreset, setLastPreset] = useState<PresetName>('national')
 
   const loadPreset = (name: PresetName) => {
     setLastPreset(name)
