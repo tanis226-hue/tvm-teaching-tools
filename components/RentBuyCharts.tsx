@@ -56,16 +56,14 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
             <YAxis tickFormatter={compact} fontSize={14} width={60} />
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
             <Legend />
-            <Line dataKey="pi" name="Mortgage P&I" stroke="#1d4ed8" dot={false} strokeWidth={3} />
-            <Line dataKey="rent" name="Rent" stroke="#b91c1c" dot={false} strokeWidth={3} />
+            <Line dataKey="pi" name="Mortgage P&I" stroke="#1d4ed8" dot={false} strokeWidth={3} isAnimationActive={false} />
+            <Line dataKey="rent" name="Rent" stroke="#b91c1c" dot={false} strokeWidth={3} isAnimationActive={false} />
             <Line
               dataKey="buyerOutlay" name="Buyer, all in" stroke="#1d4ed8"
-              dot={false} strokeDasharray="4 4"
-            />
+              dot={false} strokeDasharray="4 4" isAnimationActive={false} />
             <Line
               dataKey="renterOutlay" name="Renter, all in" stroke="#b91c1c"
-              dot={false} strokeDasharray="4 4"
-            />
+              dot={false} strokeDasharray="4 4" isAnimationActive={false} />
             {result.outlayCrossingMonth && (
               <ReferenceLine
                 x={Math.round(result.outlayCrossingMonth / 12)}
@@ -88,8 +86,8 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
             <YAxis tickFormatter={compact} fontSize={14} width={60} />
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
             <Legend />
-            <Area dataKey="interest" stackId="1" name="Interest" stroke="#b91c1c" fill="#fecaca" />
-            <Area dataKey="principal" stackId="1" name="Principal" stroke="#15803d" fill="#bbf7d0" />
+            <Area dataKey="interest" stackId="1" name="Interest" stroke="#b91c1c" fill="#fecaca" isAnimationActive={false} />
+            <Area dataKey="principal" stackId="1" name="Principal" stroke="#15803d" fill="#bbf7d0" isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       </ChartFrame>
@@ -109,8 +107,8 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
             <YAxis tickFormatter={compact} fontSize={14} width={60} />
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
             <Legend />
-            <Line dataKey="buyer" name="Buyer" stroke="#1d4ed8" dot={false} strokeWidth={3} />
-            <Line dataKey="renter" name="Renter" stroke="#b91c1c" dot={false} strokeWidth={3} />
+            <Line dataKey="buyer" name="Buyer" stroke="#1d4ed8" dot={false} strokeWidth={3} isAnimationActive={false} />
+            <Line dataKey="renter" name="Renter" stroke="#b91c1c" dot={false} strokeWidth={3} isAnimationActive={false} />
             {beYear && (
               <ReferenceLine
                 x={Math.round(beYear)} stroke="#0f172a"
@@ -132,8 +130,8 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
             <YAxis tickFormatter={compact} fontSize={14} width={60} />
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
             <Legend />
-            <Area dataKey="gone" name="Spent and gone" stroke="#b91c1c" fill="#fecaca" />
-            <Area dataKey="kept" name="Equity retained" stroke="#15803d" fill="#bbf7d0" />
+            <Area dataKey="gone" name="Spent and gone" stroke="#b91c1c" fill="#fecaca" isAnimationActive={false} />
+            <Area dataKey="kept" name="Equity retained" stroke="#15803d" fill="#bbf7d0" isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       </ChartFrame>

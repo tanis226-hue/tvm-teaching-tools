@@ -19,6 +19,13 @@ export function DashboardCharts({ rows }: { rows: SubmissionRow[] }) {
     y: Number(r.first_contribution),
   }))
 
+  // Explicit bounds rather than the 'dataMin - 2' string form, so an empty
+  // session still gets a sensible axis instead of an empty domain.
+  const ages = scatter.map(p => p.x)
+  const xDomain: [number, number] = ages.length
+    ? [Math.min(...ages) - 2, Math.max(...ages) + 2]
+    : [45, 80]
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <section className="rounded-2xl border-2 border-slate-300 bg-white p-6">
@@ -31,7 +38,7 @@ export function DashboardCharts({ rows }: { rows: SubmissionRow[] }) {
               <XAxis dataKey="label" fontSize={18} />
               <YAxis allowDecimals={false} fontSize={18} width={40} />
               <Tooltip />
-              <Bar dataKey="count" name="Students" fill="#0f172a" />
+              <Bar dataKey="count" name="Students" fill="#0f172a" isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -48,15 +55,15 @@ export function DashboardCharts({ rows }: { rows: SubmissionRow[] }) {
               <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
               <XAxis
                 type="number" dataKey="x" name="Retirement age"
-                domain={['dataMin - 2', 'dataMax + 2']} fontSize={18}
+                domain={xDomain} allowDecimals={false} fontSize={18}
               />
               <YAxis
                 type="number" dataKey="y" name="Monthly"
                 tickFormatter={v => usd(v)} fontSize={18} width={80}
               />
-              <ZAxis range={[120, 120]} />
+              <ZAxis range={[300, 300]} />
               <Tooltip formatter={tipMoney} />
-              <Scatter data={scatter} fill="#1d4ed8" />
+              <Scatter data={scatter} fill="#1d4ed8" isAnimationActive={false} />
             </ScatterChart>
           </ResponsiveContainer>
         </div>

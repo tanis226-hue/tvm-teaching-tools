@@ -45,12 +45,10 @@ export function RetirementCharts({ input }: { input: RetirementInput }) {
             <Tooltip formatter={tipMoney} labelFormatter={tipAge} />
             <Area
               type="monotone" dataKey="contributed" stackId="1" name="Contributed"
-              stroke="#1d4ed8" fill="#bfdbfe"
-            />
+              stroke="#1d4ed8" fill="#bfdbfe" isAnimationActive={false} />
             <Area
               type="monotone" dataKey="growth" stackId="1" name="Growth"
-              stroke="#15803d" fill="#bbf7d0"
-            />
+              stroke="#15803d" fill="#bbf7d0" isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       </ChartFrame>
@@ -67,8 +65,7 @@ export function RetirementCharts({ input }: { input: RetirementInput }) {
             <Tooltip formatter={tipDollars3} labelFormatter={a => `Age ${a}`} />
             <Line
               type="monotone" dataKey="value" name="Purchasing power"
-              stroke="#b91c1c" dot={false} strokeWidth={2}
-            />
+              stroke="#b91c1c" dot={false} strokeWidth={2} isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
       </ChartFrame>
@@ -83,7 +80,7 @@ export function RetirementCharts({ input }: { input: RetirementInput }) {
             <XAxis dataKey="startAge" tickFormatter={a => `Start ${a}`} fontSize={11} />
             <YAxis tickFormatter={compact} fontSize={11} width={48} />
             <Tooltip formatter={tipMoneyPerMonth} labelFormatter={a => `Starting at ${a}`} />
-            <Bar dataKey="contribution" name="Monthly contribution" fill="#0f172a" />
+            <Bar dataKey="contribution" name="Monthly contribution" fill="#0f172a" isAnimationActive={false} />
           </BarChart>
         </ResponsiveContainer>
       </ChartFrame>
@@ -100,8 +97,7 @@ export function RetirementCharts({ input }: { input: RetirementInput }) {
             <Tooltip formatter={tipMoney} labelFormatter={tipAge} />
             <Area
               type="monotone" dataKey="balance" name="Balance"
-              stroke="#7c3aed" fill="#ddd6fe"
-            />
+              stroke="#7c3aed" fill="#ddd6fe" isAnimationActive={false} />
           </AreaChart>
         </ResponsiveContainer>
       </ChartFrame>

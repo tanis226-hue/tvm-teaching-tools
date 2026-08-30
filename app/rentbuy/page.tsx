@@ -82,10 +82,12 @@ export default function RentBuyPage() {
                   key={d}
                   onClick={() => set('downPct')(d)}
                   className={`rounded-lg border px-1 py-2 text-sm font-semibold ${
-                    input.downPct === d ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300'
+                    input.downPct === d
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-400 text-slate-700'
                   }`}
                 >
-                  {d * 100}%
+                  {+(d * 100).toFixed(1)}%
                 </button>
               ))}
             </div>
@@ -99,7 +101,9 @@ export default function RentBuyPage() {
                   key={t}
                   onClick={() => set('termYears')(t)}
                   className={`rounded-lg border px-2 py-2 text-sm font-semibold ${
-                    input.termYears === t ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300'
+                    input.termYears === t
+                      ? 'border-slate-900 bg-slate-900 text-white'
+                      : 'border-slate-400 text-slate-700'
                   }`}
                 >
                   {t} years

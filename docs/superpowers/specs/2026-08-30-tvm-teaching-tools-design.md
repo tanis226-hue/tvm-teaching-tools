@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-30
 **Course:** Business Mathematics (first-semester freshmen), FGCU
-**Status:** Approved for implementation planning
+**Status:** Implemented. Sections 5.7 and 7.2 were revised during implementation; both revisions are marked inline.
 
 ---
 
@@ -213,6 +213,8 @@ Session-scoped. The instructor generates a session code; the QR encodes the URL 
 
 **Instructor dashboard:** histogram of desired monthly income (the spread is the lesson), median/min/max, scatter of retirement age vs required contribution, class-wide totals. Presentable on a projector: large type, readable from the back of the room. Auto-refresh so submissions appear live.
 
+**Read access, decided during implementation.** Results are readable by session code alone, without the instructor token. The code is already public on the projector and the data is anonymous by construction, so gating reads would add friction without protecting anything. The instructor token still gates session closure, which is the only destructive action.
+
 **Dedupe:** a device hash, unique per session, stops one student from skewing the distribution. Re-submitting from the same device updates that row rather than inserting a new one.
 
 The hash is a random UUID minted on first visit and kept in `localStorage`, then salted with the session code before storage. It is deliberately not a fingerprint: it identifies a browser, not a person, and a student who clears storage or switches phones can submit again. That is an acceptable ceiling for a classroom poll and keeps the anonymity claim in the previous paragraph literally true.
@@ -355,7 +357,9 @@ Session codes use an unambiguous alphabet (no 0/O, 1/I/L) because students read 
 
 ### 7.2 Trust boundary
 
-Computed outputs arrive from the client and are stored as submitted, so a determined student could post nonsense. This is a classroom poll, not an exam. The mitigations are proportionate: server-side range validation on the three inputs, the per-session device-hash unique constraint, and an instructor control to close a session. Recomputing server-side is not worth the duplicated solver.
+**Revised during implementation.** The original plan accepted client-computed outputs on the grounds that recomputing would mean a duplicated solver. That objection turned out not to apply: the submit route runs in Node and imports `lib/retirement.ts` directly, so recomputation costs one function call and no duplication. The route therefore ignores any client-supplied outputs and stores its own, making the persisted figures authoritative.
+
+The client still sends only the three inputs plus a match rate. Remaining mitigations are proportionate to a classroom poll: Zod range validation mirrored by Postgres check constraints, the per-session device-hash unique constraint, and an instructor control to close a session.
 
 ### 7.3 Testing
 

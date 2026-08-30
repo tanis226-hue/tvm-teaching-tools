@@ -14,7 +14,7 @@ export function NumberField({
           type="number" inputMode="numeric" value={value} min={min} max={max} step={step}
           onChange={e => onChange(Number(e.target.value))}
           onBlur={e => onChange(Math.min(max, Math.max(min, Number(e.target.value))))}
-          className="w-full rounded-lg border border-slate-300 px-3 py-3 text-lg tabular-nums focus:border-slate-900 focus:outline-none"
+          className="w-full rounded-lg border border-slate-400 bg-white px-3 py-3 text-lg font-semibold tabular-nums text-slate-900 focus:border-slate-900 focus:outline-none"
         />
         {suffix && <span className="text-sm text-slate-500">{suffix}</span>}
       </div>
