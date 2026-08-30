@@ -60,6 +60,25 @@ The first two are supposed to be alarming so the third reads as relief. Do not r
 No names, no student IDs, no emails, no IP addresses, ever. The device hash identifies a
 browser for dedupe only. If a change would add a personally identifying field, stop.
 
+## Deploying
+
+Stop the dev server before `netlify deploy`. A running `next dev` holds files in
+`.next` open on Windows and the Netlify Next adapter fails in `onPostBuild` with
+"Failed publishing static content", which names neither the cause nor a file.
+`rm -rf .next` first if a deploy has already failed.
+
+## Module 2 rules
+
+- The money-gone series must derive from `buyerOutlay - principal`, never from a
+  re-derivation of the carrying costs. Re-deriving it is what silently dropped HOA.
+- Plot cumulative **principal**, not `equity`, as the retained series. Equity includes
+  appreciation the buyer never paid for and makes the chart contradict the headline.
+- PMI terminates against the **original** price at 78% LTV, gated on `downPct < 0.2`.
+  Never against the appreciated value.
+- Any sentence about who is ahead must branch on the sign of the gap. `Math.abs` plus a
+  hardcoded "behind" shipped a claim that was wrong in 110 of 521 slider positions.
+- Labels that name a horizon must interpolate `input.termYears`, not hardcode 30.
+
 ## Neon
 
 `lib/db.ts` initializes the client lazily so the app builds and Module 2 runs without
