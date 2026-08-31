@@ -24,6 +24,11 @@ const tipAge = (a: unknown) => `Age ${Math.round(Number(a))}`
 // One point per year keeps 540 months from choking the SVG on a phone.
 const yearly = <T extends { month: number }>(rows: T[]) => rows.filter(r => r.month % 12 === 0)
 
+// Recharts defaults to a 5px right margin, and the last x-axis tick is centred
+// on the final data point, so half of it hangs outside the surface and clips.
+// A two-digit age needs about 8px of that overhang.
+const MARGIN = { top: 5, right: 12, bottom: 5, left: 0 }
+
 export function RetirementCharts({ input }: { input: RetirementInput }) {
   const accum = yearly(accumulationSeries(input))
   const draw = yearly(drawdownSeries(input))
@@ -38,7 +43,7 @@ export function RetirementCharts({ input }: { input: RetirementInput }) {
         note="Blue is what you put in. Green is what compounding added."
       >
         <ResponsiveContainer>
-          <AreaChart data={accum}>
+          <AreaChart data={accum} margin={MARGIN}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="age" tickFormatter={a => String(Math.round(a))} fontSize={11} />
             <YAxis tickFormatter={compact} fontSize={11} width={48} />
@@ -58,7 +63,7 @@ export function RetirementCharts({ input }: { input: RetirementInput }) {
         note={`${(INFLATION * 100).toFixed(1)}% inflation, from age ${input.currentAge} to ${LIFE_EXPECTANCY}.`}
       >
         <ResponsiveContainer>
-          <LineChart data={power}>
+          <LineChart data={power} margin={MARGIN}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="age" fontSize={11} />
             <YAxis domain={[0, 1]} tickFormatter={v => `$${v.toFixed(2)}`} fontSize={11} width={48} />
@@ -75,7 +80,7 @@ export function RetirementCharts({ input }: { input: RetirementInput }) {
         note="Same target, same retirement age. Only the start date changes."
       >
         <ResponsiveContainer>
-          <BarChart data={waiting}>
+          <BarChart data={waiting} margin={MARGIN}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="startAge" tickFormatter={a => `Start ${a}`} fontSize={11} />
             <YAxis tickFormatter={compact} fontSize={11} width={48} />
@@ -90,7 +95,7 @@ export function RetirementCharts({ input }: { input: RetirementInput }) {
         note={`From ${input.retirementAge} to ${LIFE_EXPECTANCY}, landing on ${usd(residual)} left over.`}
       >
         <ResponsiveContainer>
-          <AreaChart data={draw}>
+          <AreaChart data={draw} margin={MARGIN}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="age" tickFormatter={a => String(Math.round(a))} fontSize={11} />
             <YAxis tickFormatter={compact} fontSize={11} width={48} />

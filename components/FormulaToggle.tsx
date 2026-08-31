@@ -7,7 +7,7 @@ export function FormulaToggle({ children }: { children: React.ReactNode }) {
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <button
         onClick={() => setOpen(o => !o)}
-        className="text-sm font-medium text-brand underline underline-offset-4"
+        className="inline-flex min-h-11 items-center text-sm font-medium text-brand underline underline-offset-4"
       >
         {open ? 'Hide the formula' : 'Show the formula'}
       </button>

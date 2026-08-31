@@ -30,3 +30,13 @@ body {
 input[type="range"] {
   height: 1.5rem;
 }
+
+/* On a phone the 24px box is a fiddly drag target, and students open /rentbuy
+   on their own. The UA draws the track and thumb at a fixed size and centres
+   them, so the extra height is hit area only and the projector look is
+   unchanged. */
+@media (pointer: coarse) {
+  input[type="range"] {
+    height: 2.75rem;
+  }
+}

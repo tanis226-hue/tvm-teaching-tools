@@ -104,12 +104,12 @@ export default function RentBuyPage() {
     <main className="mx-auto max-w-[1600px] px-6 py-6">
       <header className="flex flex-wrap items-baseline justify-between gap-4 pb-4">
         <h1 className="text-4xl font-bold text-slate-900">Rent or buy?</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {PRESET_LABELS.map(([k, label]) => (
             <button
               key={k}
               onClick={() => loadPreset(k)}
-              className={`rounded-xl border-2 px-5 py-2 text-lg font-semibold transition-colors ${
+              className={`min-h-11 whitespace-nowrap rounded-xl border-2 px-3 py-2 text-base font-semibold transition-colors sm:px-5 sm:text-lg ${
                 activePreset === k
                   ? 'border-brand bg-brand text-white'
                   : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
@@ -122,7 +122,7 @@ export default function RentBuyPage() {
             onClick={() => loadPreset(lastPreset)}
             disabled={activePreset !== null}
             title={`Restore the ${PRESET_LABELS.find(([k]) => k === lastPreset)![1]} defaults`}
-            className="rounded-xl border-2 border-slate-300 bg-white px-5 py-2 text-lg font-semibold text-slate-700 transition-colors hover:border-slate-400 disabled:border-slate-200 disabled:text-slate-300 disabled:hover:border-slate-200"
+            className="min-h-11 whitespace-nowrap rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-base font-semibold text-slate-700 transition-colors hover:border-slate-400 disabled:border-slate-200 disabled:text-slate-300 disabled:hover:border-slate-200 sm:px-5 sm:text-lg"
           >
             Reset
           </button>
@@ -144,7 +144,7 @@ export default function RentBuyPage() {
                 <button
                   key={d}
                   onClick={() => set('downPct')(d)}
-                  className={`rounded-lg border px-1 py-2 text-sm font-semibold transition-colors ${
+                  className={`min-h-11 rounded-lg border px-1 py-2 text-sm font-semibold transition-colors ${
                     input.downPct === d
                       ? 'border-brand bg-brand text-white'
                       : 'border-slate-400 text-slate-700 hover:border-slate-500'
@@ -163,7 +163,7 @@ export default function RentBuyPage() {
                 <button
                   key={t}
                   onClick={() => setTerm(t)}
-                  className={`rounded-lg border px-2 py-2 text-sm font-semibold transition-colors ${
+                  className={`min-h-11 rounded-lg border px-2 py-2 text-sm font-semibold transition-colors ${
                     input.termYears === t
                       ? 'border-brand bg-brand text-white'
                       : 'border-slate-400 text-slate-700 hover:border-slate-500'
@@ -190,7 +190,7 @@ export default function RentBuyPage() {
             step={0.005} format={pctFmt} onChange={set('closingSellPct')} />
 
           <details className="group rounded-xl border border-slate-200 bg-slate-50">
-            <summary className="cursor-pointer list-none px-3 py-2 text-sm font-semibold text-brand">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center px-3 py-2 text-sm font-semibold text-brand">
               <span className="group-open:hidden">Show the other assumptions</span>
               <span className="hidden group-open:inline">Hide the other assumptions</span>
             </summary>

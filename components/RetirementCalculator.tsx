@@ -107,7 +107,7 @@ export function RetirementCalculator({ code }: { code?: string }) {
               <button
                 key={m}
                 onClick={() => setMatchRate(m)}
-                className={`rounded-lg border px-2 py-2 text-sm font-medium transition-colors ${
+                className={`min-h-11 rounded-lg border px-2 py-2 text-sm font-medium transition-colors ${
                   matchRate === m
                     ? 'border-brand bg-brand text-white'
                     : 'border-slate-300 text-slate-700 hover:border-slate-400'

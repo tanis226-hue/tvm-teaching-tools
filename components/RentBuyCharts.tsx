@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import {
   Area, AreaChart, CartesianGrid, ComposedChart, Label, Legend, Line, LineChart, ReferenceLine,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -15,9 +16,29 @@ const compact = (n: number) =>
 const tipMoney = (v: unknown) => usd(Number(v))
 const tipYear = (y: unknown) => `Year ${Number(y).toFixed(1)}`
 
-const AXIS = 18
-const LABEL = 15
 const TICKS = [0, 10, 20, 30, 40, 50]
+
+// Module 2 is projector-first, but the same charts land on a 375px phone when a
+// student opens /rentbuy at home. Read the real grid track width rather than
+// guessing whether the lg: breakpoint applied, so one measurement covers the
+// one-column phone, the one-column tablet and the two-column projector.
+function useColumnWidth() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(0)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const read = () => {
+      const track = parseFloat(getComputedStyle(el).gridTemplateColumns)
+      setWidth(Number.isFinite(track) ? track : el.clientWidth)
+    }
+    read()
+    const ro = new ResizeObserver(read)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  return [ref, width] as const
+}
 
 // A whole-year ReferenceLine disagreed with a hero that says 5.7, and rounded
 // to x=0 (off a category axis, so invisible) for any crossing under 6 months.
@@ -25,6 +46,25 @@ const TICKS = [0, 10, 20, 30, 40, 50]
 const yearLine = (month: number | null) => (month === null ? null : Math.max(0.1, month / 12))
 
 export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: RentBuyResult }) {
+  const [gridRef, columnWidth] = useColumnWidth()
+  // 40px is ChartFrame's p-5. Before the first measurement assume the projector,
+  // so a laptop never paints the phone chrome.
+  const chartWidth = columnWidth ? columnWidth - 40 : 640
+  const narrow = chartWidth < 380
+
+  const AXIS = narrow ? 12 : 18
+  const LABEL = narrow ? 11 : 15
+  // At 78px the y-axis ate 27% of a 286px chart. The rotated axis title goes
+  // with it: on a phone the card title already says what is being plotted.
+  // Both numbers are set by the widest tick the compact formatter can emit,
+  // six characters: "$28.5M" at a high budget, "$-800K" at a low one. 78 was
+  // too tight on the projector and the top tick sat on the rotated title
+  // wherever the axis reached six characters, which is most slider positions.
+  const yWidth = narrow ? 56 : 96
+  // left 10, not 4: at 4 the rotated axis title's glyph box started at -0.9px
+  // and the svg clips.
+  const margin = { top: 44, right: 16, bottom: narrow ? 38 : 44, left: narrow ? 4 : 10 }
+
   const yearly = result.rows.filter(r => r.month % 12 === 0)
 
   const data = yearly.map(r => ({
@@ -76,35 +116,47 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
     </XAxis>
   )
 
+  const yAxis = (title: string) => (
+    <YAxis tickFormatter={compact} fontSize={AXIS} width={yWidth}>
+      {narrow ? null : <Label value={title} angle={-90} position="insideLeft" fontSize={LABEL} />}
+    </YAxis>
+  )
+
+  // Recharts anchors the legend wrapper AT margin.top, so growing the margin
+  // moves the legend down with the plot and never separates them. Pinning the
+  // wrapper to y=0 puts the legend in the reserved strip above the plot. The
+  // font size has to come along: at 16px the four-series legend wrapped to
+  // three lines and spilled 22px back into the plot.
+  const legend = <Legend verticalAlign="top" align="left" wrapperStyle={{ top: 0, left: 4, fontSize: AXIS }} />
+
   const payoffLine = (
     <ReferenceLine
       x={payoff} stroke="#15803d" strokeDasharray="4 3"
       // Bottom, not top: at year 30 this collided with the breakeven and
-      // outlay-crossing labels, which both sit top-left.
-      label={{ value: 'Mortgage paid off', position: 'insideBottomRight', fontSize: LABEL, fill: '#15803d' }}
+      // outlay-crossing labels, which both sit top-left. "Right" on a vertical
+      // line renders leftward from it, so the full phrase reached back across a
+      // phone-width plot and sat on the $0 tick.
+      label={{
+        value: narrow ? 'Paid off' : 'Mortgage paid off',
+        position: 'insideBottomRight', fontSize: LABEL, fill: '#15803d',
+      }}
     />
   )
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div ref={gridRef} className="grid gap-6 lg:grid-cols-2">
       <ChartFrame
         projector
         title="Fixed payment vs rising rent"
         note={`The flat blue line is principal and interest: it never moves for ${payoff} years, then drops to zero at the green marker. The red line is rent, compounding ${(input.rentIncreasePct * 100).toFixed(1)}% a year to ${usd(result.rows[599].rent)} by year ${HORIZON_YEARS}. The dashed blue line is the buyer's true all-in cost, which starts above the rent and is overtaken at the black marker.`}
       >
         <ResponsiveContainer>
-          <LineChart data={data} margin={{ top: 44, right: 16, bottom: 44, left: 4 }}>
+          <LineChart data={data} margin={margin}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             {xAxis}
-            <YAxis tickFormatter={compact} fontSize={AXIS} width={78}>
-              <Label value="Per month" angle={-90} position="insideLeft" fontSize={LABEL} />
-            </YAxis>
+            {yAxis('Per month')}
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
-            {/* Recharts anchors the legend wrapper AT margin.top, so growing
-                the margin moves the legend down with the plot and never
-                separates them. Pinning the wrapper to y=0 puts the legend in
-                the reserved strip above the plot instead. */}
-            <Legend verticalAlign="top" align="left" wrapperStyle={{ top: 0, left: 4 }} />
+            {legend}
             <Line dataKey="pi" name="Mortgage P&I" stroke="#1d4ed8" dot={false} strokeWidth={3} isAnimationActive={false} />
             <Line dataKey="rent" name="Rent" stroke="#b91c1c" dot={false} strokeWidth={3} isAnimationActive={false} />
             <Line
@@ -115,7 +167,10 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
             {crossYear && (
               <ReferenceLine
                 x={crossYear} stroke="#0f172a" strokeDasharray="2 2"
-                label={{ value: 'All-in costs cross', position: 'insideTopLeft', fontSize: LABEL, fill: '#0f172a' }}
+                label={{
+                  value: narrow ? 'Costs cross' : 'All-in costs cross',
+                  position: 'insideTopLeft', fontSize: LABEL, fill: '#0f172a',
+                }}
               />
             )}
             {payoffLine}
@@ -129,18 +184,12 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
         note={`Grey is interest, green is principal. Payment 1 is ${usd(result.rows[0].principal)} principal against ${usd(result.rows[0].interest)} interest, so only ${((result.rows[0].principal / (result.rows[0].pi || 1)) * 100).toFixed(1)}% of it builds equity. Watch where the grey band finally falls below the green one, and note that both vanish at year ${payoff} when the loan is repaid.`}
       >
         <ResponsiveContainer>
-          <AreaChart data={data} margin={{ top: 44, right: 16, bottom: 44, left: 4 }}>
+          <AreaChart data={data} margin={margin}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             {xAxis}
-            <YAxis tickFormatter={compact} fontSize={AXIS} width={78}>
-              <Label value="Per month" angle={-90} position="insideLeft" fontSize={LABEL} />
-            </YAxis>
+            {yAxis('Per month')}
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
-            {/* Recharts anchors the legend wrapper AT margin.top, so growing
-                the margin moves the legend down with the plot and never
-                separates them. Pinning the wrapper to y=0 puts the legend in
-                the reserved strip above the plot instead. */}
-            <Legend verticalAlign="top" align="left" wrapperStyle={{ top: 0, left: 4 }} />
+            {legend}
             {/* Slate vs green, not red vs green: the two fills were 1.19:1 apart
                 and collapsed entirely under deuteranopia. */}
             <Area dataKey="interest" stackId="1" name="Interest" stroke="#0f172a" fill="#94a3b8" fillOpacity={0.85} isAnimationActive={false} />
@@ -163,18 +212,12 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
         }
       >
         <ResponsiveContainer>
-          <LineChart data={data} margin={{ top: 44, right: 16, bottom: 44, left: 4 }}>
+          <LineChart data={data} margin={margin}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             {xAxis}
-            <YAxis tickFormatter={compact} fontSize={AXIS} width={78}>
-              <Label value="Net worth" angle={-90} position="insideLeft" fontSize={LABEL} />
-            </YAxis>
+            {yAxis('Net worth')}
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
-            {/* Recharts anchors the legend wrapper AT margin.top, so growing
-                the margin moves the legend down with the plot and never
-                separates them. Pinning the wrapper to y=0 puts the legend in
-                the reserved strip above the plot instead. */}
-            <Legend verticalAlign="top" align="left" wrapperStyle={{ top: 0, left: 4 }} />
+            {legend}
             <Line dataKey="buyer" name="Buyer" stroke="#1d4ed8" dot={false} strokeWidth={3} isAnimationActive={false} />
             <Line dataKey="renter" name="Renter" stroke="#b91c1c" dot={false} strokeWidth={3} isAnimationActive={false} />
             {beYear && (
@@ -200,22 +243,21 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
         note={`Grey is every dollar the buyer spends that does not come back: interest, tax, insurance, upkeep and closing costs. Green is the only part they keep, the principal. The red line is the renter's cumulative rent, all of it gone. Grey sits above green for decades, which is the point.`}
       >
         <ResponsiveContainer>
-          <ComposedChart data={flow} margin={{ top: 44, right: 16, bottom: 44, left: 4 }}>
+          <ComposedChart data={flow} margin={margin}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             {xAxis}
-            <YAxis tickFormatter={compact} fontSize={AXIS} width={78}>
-              <Label value="Cumulative" angle={-90} position="insideLeft" fontSize={LABEL} />
-            </YAxis>
+            {yAxis('Cumulative')}
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
-            {/* Recharts anchors the legend wrapper AT margin.top, so growing
-                the margin moves the legend down with the plot and never
-                separates them. Pinning the wrapper to y=0 puts the legend in
-                the reserved strip above the plot instead. */}
-            <Legend verticalAlign="top" align="left" wrapperStyle={{ top: 0, left: 4 }} />
-            <Area dataKey="goneBuyer" name="Buyer: spent and gone" stroke="#0f172a" fill="#94a3b8" fillOpacity={0.85} isAnimationActive={false} />
-            <Area dataKey="keptBuyer" name="Buyer: principal retained" stroke="#15803d" fill="#86efac" fillOpacity={0.85} isAnimationActive={false} />
-            {/* PRD chart 5: the renter half of the comparison. */}
-            <Line dataKey="goneRenter" name="Renter: rent paid, all gone" stroke="#b91c1c" dot={false} strokeWidth={3} isAnimationActive={false} />
+            {legend}
+            <Area dataKey="goneBuyer" name="Buyer: gone" stroke="#0f172a" fill="#94a3b8" fillOpacity={0.85} isAnimationActive={false} />
+            <Area dataKey="keptBuyer" name="Buyer: kept" stroke="#15803d" fill="#86efac" fillOpacity={0.85} isAnimationActive={false} />
+            {/* Short names, not "Buyer: spent and gone" etc. The reserved top
+                strip is 44px, which is one 18px legend line; the long forms
+                wrapped to two at the 540px chart width a 1920 projector gives,
+                and to three on a phone. The note above the chart carries the
+                explanation, so the legend only has to be a colour key.
+                PRD chart 5: the renter half of the comparison. */}
+            <Line dataKey="goneRenter" name="Renter: rent" stroke="#b91c1c" dot={false} strokeWidth={3} isAnimationActive={false} />
             {payoffLine}
           </ComposedChart>
         </ResponsiveContainer>
