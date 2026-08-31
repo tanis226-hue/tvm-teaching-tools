@@ -1,12 +1,12 @@
-import { ASSUMPTION_LABELS } from '@/lib/assumptions'
+import { ASSUMPTION_LABELS, INFLATION } from '@/lib/assumptions'
 
 export function AssumptionsPanel() {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+    <section className="rounded-2xl border-l-4 border-accent bg-accent-tint p-5 shadow-sm">
       <h2 className="text-sm font-semibold text-slate-700">Class assumptions</h2>
       <p className="mt-1 text-xs text-slate-500">
         Locked so everyone&apos;s answers are comparable. Returns use APR &divide; 12;
-        inflation compounds monthly at (1.03)<sup>1/12</sup> &minus; 1.
+        inflation compounds monthly at ({(1 + INFLATION).toFixed(3)})<sup>1/12</sup> &minus; 1.
       </p>
       <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
         {ASSUMPTION_LABELS.map(a => (

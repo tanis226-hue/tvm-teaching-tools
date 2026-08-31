@@ -111,10 +111,10 @@ export default function RentBuyPage() {
             <button
               key={k}
               onClick={() => loadPreset(k)}
-              className={`rounded-xl border-2 px-5 py-2 text-lg font-semibold ${
+              className={`rounded-xl border-2 px-5 py-2 text-lg font-semibold transition-colors ${
                 activePreset === k
-                  ? 'border-slate-900 bg-slate-900 text-white'
-                  : 'border-slate-300 text-slate-700'
+                  ? 'border-brand bg-brand text-white'
+                  : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
               }`}
             >
               {label}
@@ -124,21 +124,21 @@ export default function RentBuyPage() {
             onClick={() => loadPreset(lastPreset)}
             disabled={activePreset !== null}
             title={`Restore the ${PRESET_LABELS.find(([k]) => k === lastPreset)![1]} defaults`}
-            className="rounded-xl border-2 border-slate-300 px-5 py-2 text-lg font-semibold text-slate-700 disabled:border-slate-200 disabled:text-slate-300"
+            className="rounded-xl border-2 border-slate-300 bg-white px-5 py-2 text-lg font-semibold text-slate-700 transition-colors hover:border-slate-400 disabled:border-slate-200 disabled:text-slate-300 disabled:hover:border-slate-200"
           >
             Reset
           </button>
         </div>
       </header>
 
-      <section className="sticky top-0 z-20 -mx-6 flex flex-wrap items-baseline gap-x-6 gap-y-1 border-b-2 border-slate-900 bg-slate-900 px-6 py-3 text-white">
-        <p className="text-lg text-slate-300">{headline.lead}</p>
+      <section className="sticky top-0 z-20 -mx-6 flex flex-wrap items-baseline gap-x-6 gap-y-1 border-b-[3px] border-accent bg-brand px-6 py-3 text-white shadow-sm">
+        <p className="text-lg text-white/75">{headline.lead}</p>
         <p className="text-4xl font-bold tabular-nums">{headline.figure}</p>
-        <p className="text-base text-slate-300">{headline.detail}</p>
+        <p className="text-base text-white/75">{headline.detail}</p>
       </section>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[340px_1fr]">
-        <aside className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5">
+        <aside className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div>
             <p className="text-base text-slate-600">Down payment</p>
             <div className="mt-2 grid grid-cols-4 gap-2">
@@ -146,10 +146,10 @@ export default function RentBuyPage() {
                 <button
                   key={d}
                   onClick={() => set('downPct')(d)}
-                  className={`rounded-lg border px-1 py-2 text-sm font-semibold ${
+                  className={`rounded-lg border px-1 py-2 text-sm font-semibold transition-colors ${
                     input.downPct === d
-                      ? 'border-slate-900 bg-slate-900 text-white'
-                      : 'border-slate-400 text-slate-700'
+                      ? 'border-brand bg-brand text-white'
+                      : 'border-slate-400 text-slate-700 hover:border-slate-500'
                   }`}
                 >
                   {+(d * 100).toFixed(1)}%
@@ -165,10 +165,10 @@ export default function RentBuyPage() {
                 <button
                   key={t}
                   onClick={() => setTerm(t)}
-                  className={`rounded-lg border px-2 py-2 text-sm font-semibold ${
+                  className={`rounded-lg border px-2 py-2 text-sm font-semibold transition-colors ${
                     input.termYears === t
-                      ? 'border-slate-900 bg-slate-900 text-white'
-                      : 'border-slate-400 text-slate-700'
+                      ? 'border-brand bg-brand text-white'
+                      : 'border-slate-400 text-slate-700 hover:border-slate-500'
                   }`}
                 >
                   {t} yr @ {(TERM_RATES[t] * 100).toFixed(2)}%
@@ -200,24 +200,22 @@ export default function RentBuyPage() {
           <SliderRow label="Homeowners insurance" value={input.insAnnual} min={0} max={12000}
             step={100} format={perYear} onChange={set('insAnnual')} />
 
+          {/* A slider, not a toggle. As a toggle this did nothing on the
+              National preset, where floodAnnual is $0 either way. Dragging it
+              off zero is now the same gesture as "this home is in a flood
+              zone", and it always visibly moves the model. */}
           <div>
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-base text-slate-600">Flood insurance</span>
-              <button
-                onClick={() => set('includeFlood')(!input.includeFlood)}
-                className={`rounded-lg border px-3 py-1 text-sm font-semibold ${
-                  input.includeFlood
-                    ? 'border-slate-900 bg-slate-900 text-white'
-                    : 'border-slate-400 text-slate-700'
-                }`}
-              >
-                {input.includeFlood
-                  ? `In a flood zone: ${usd(input.floodAnnual)}/yr`
-                  : 'Not in a flood zone'}
-              </button>
-            </div>
+            <SliderRow
+              label="Flood insurance" value={input.includeFlood ? input.floodAnnual : 0}
+              min={0} max={6000} step={125}
+              format={n => (n === 0 ? 'None' : `${usd(n)}/yr`)}
+              onChange={n =>
+                setInput(prev => ({ ...prev, floodAnnual: n, includeFlood: n > 0 }))
+              }
+            />
             <p className="mt-1 text-xs text-slate-500">
               Three in four Lee County single-family flood policies are in a mapped zone.
+              Nationally it is closer to one in twenty.
             </p>
           </div>
 
@@ -225,7 +223,7 @@ export default function RentBuyPage() {
             <SliderRow label="Property tax" value={input.taxPct} min={0} max={0.03}
               step={0.001} format={pctFmt} onChange={set('taxPct')} />
           ) : (
-            <div className="rounded-xl bg-slate-50 p-3">
+            <div className="rounded-xl border-l-4 border-accent bg-accent-tint p-3">
               <p className="text-sm font-semibold text-slate-700">Property tax: Florida homestead</p>
               <p className="mt-1 text-sm font-medium tabular-nums text-slate-900">
                 {usd(taxYear1)} in year 1, {pctFmt(effTaxYr1)} of value
@@ -240,7 +238,7 @@ export default function RentBuyPage() {
           <SliderRow label="HOA" value={input.hoaMonthly} min={0} max={800}
             step={25} format={money} onChange={set('hoaMonthly')} />
 
-          <div className="rounded-xl bg-slate-50 p-3">
+          <div className="rounded-xl border-l-4 border-accent bg-accent-tint p-3">
             <p className="text-sm font-semibold text-slate-700">Fixed, not adjustable</p>
             <dl className="mt-1 space-y-0.5">
               {[
@@ -267,7 +265,7 @@ export default function RentBuyPage() {
               [`Total interest, ${input.termYears} yrs`, usd(result.totalInterest)],
               ['Price to rent', `${priceToRent.toFixed(1)}x`],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5">
+              <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="text-sm text-slate-600">{label}</p>
                 <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{value}</p>
               </div>

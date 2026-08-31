@@ -70,7 +70,9 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
       type="number" dataKey="year" domain={[0, HORIZON_YEARS]} ticks={TICKS}
       fontSize={AXIS} tickMargin={4}
     >
-      <Label value="Years after buying" position="insideBottom" offset={-4} fontSize={LABEL} />
+      {/* "bottom" renders in the margin band below the ticks. "insideBottom"
+          drew it on top of the tick row. */}
+      <Label value="Years after buying" position="bottom" offset={10} fontSize={LABEL} />
     </XAxis>
   )
 
@@ -91,18 +93,22 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
         note={`The flat blue line is principal and interest: it never moves for ${payoff} years, then drops to zero at the green marker. The red line is rent, compounding ${(input.rentIncreasePct * 100).toFixed(1)}% a year to ${usd(result.rows[599].rent)} by year ${HORIZON_YEARS}. The dashed blue line is the buyer's true all-in cost, which starts above the rent and is overtaken at the black marker.`}
       >
         <ResponsiveContainer>
-          <LineChart data={data} margin={{ top: 8, right: 12, bottom: 20, left: 0 }}>
+          <LineChart data={data} margin={{ top: 44, right: 16, bottom: 44, left: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             {xAxis}
             <YAxis tickFormatter={compact} fontSize={AXIS} width={78}>
               <Label value="Per month" angle={-90} position="insideLeft" fontSize={LABEL} />
             </YAxis>
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
-            <Legend />
+            {/* Recharts anchors the legend wrapper AT margin.top, so growing
+                the margin moves the legend down with the plot and never
+                separates them. Pinning the wrapper to y=0 puts the legend in
+                the reserved strip above the plot instead. */}
+            <Legend verticalAlign="top" align="left" wrapperStyle={{ top: 0, left: 4 }} />
             <Line dataKey="pi" name="Mortgage P&I" stroke="#1d4ed8" dot={false} strokeWidth={3} isAnimationActive={false} />
             <Line dataKey="rent" name="Rent" stroke="#b91c1c" dot={false} strokeWidth={3} isAnimationActive={false} />
             <Line
-              dataKey="buyerOutlay" name="Buyer, all in (tax, insurance, upkeep)"
+              dataKey="buyerOutlay" name="Buyer, all in"
               stroke="#1d4ed8" dot={false} strokeWidth={2} strokeDasharray="6 4"
               isAnimationActive={false}
             />
@@ -123,14 +129,18 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
         note={`Grey is interest, green is principal. Payment 1 is ${usd(result.rows[0].principal)} principal against ${usd(result.rows[0].interest)} interest, so only ${((result.rows[0].principal / (result.rows[0].pi || 1)) * 100).toFixed(1)}% of it builds equity. Watch where the grey band finally falls below the green one, and note that both vanish at year ${payoff} when the loan is repaid.`}
       >
         <ResponsiveContainer>
-          <AreaChart data={data} margin={{ top: 8, right: 12, bottom: 20, left: 0 }}>
+          <AreaChart data={data} margin={{ top: 44, right: 16, bottom: 44, left: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             {xAxis}
             <YAxis tickFormatter={compact} fontSize={AXIS} width={78}>
               <Label value="Per month" angle={-90} position="insideLeft" fontSize={LABEL} />
             </YAxis>
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
-            <Legend />
+            {/* Recharts anchors the legend wrapper AT margin.top, so growing
+                the margin moves the legend down with the plot and never
+                separates them. Pinning the wrapper to y=0 puts the legend in
+                the reserved strip above the plot instead. */}
+            <Legend verticalAlign="top" align="left" wrapperStyle={{ top: 0, left: 4 }} />
             {/* Slate vs green, not red vs green: the two fills were 1.19:1 apart
                 and collapsed entirely under deuteranopia. */}
             <Area dataKey="interest" stackId="1" name="Interest" stroke="#0f172a" fill="#94a3b8" fillOpacity={0.85} isAnimationActive={false} />
@@ -153,14 +163,18 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
         }
       >
         <ResponsiveContainer>
-          <LineChart data={data} margin={{ top: 8, right: 12, bottom: 20, left: 0 }}>
+          <LineChart data={data} margin={{ top: 44, right: 16, bottom: 44, left: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             {xAxis}
             <YAxis tickFormatter={compact} fontSize={AXIS} width={78}>
               <Label value="Net worth" angle={-90} position="insideLeft" fontSize={LABEL} />
             </YAxis>
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
-            <Legend />
+            {/* Recharts anchors the legend wrapper AT margin.top, so growing
+                the margin moves the legend down with the plot and never
+                separates them. Pinning the wrapper to y=0 puts the legend in
+                the reserved strip above the plot instead. */}
+            <Legend verticalAlign="top" align="left" wrapperStyle={{ top: 0, left: 4 }} />
             <Line dataKey="buyer" name="Buyer" stroke="#1d4ed8" dot={false} strokeWidth={3} isAnimationActive={false} />
             <Line dataKey="renter" name="Renter" stroke="#b91c1c" dot={false} strokeWidth={3} isAnimationActive={false} />
             {beYear && (
@@ -186,14 +200,18 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
         note={`Grey is every dollar the buyer spends that does not come back: interest, tax, insurance, upkeep and closing costs. Green is the only part they keep, the principal. The red line is the renter's cumulative rent, all of it gone. Grey sits above green for decades, which is the point.`}
       >
         <ResponsiveContainer>
-          <ComposedChart data={flow} margin={{ top: 8, right: 12, bottom: 20, left: 0 }}>
+          <ComposedChart data={flow} margin={{ top: 44, right: 16, bottom: 44, left: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             {xAxis}
             <YAxis tickFormatter={compact} fontSize={AXIS} width={78}>
               <Label value="Cumulative" angle={-90} position="insideLeft" fontSize={LABEL} />
             </YAxis>
             <Tooltip formatter={tipMoney} labelFormatter={tipYear} />
-            <Legend />
+            {/* Recharts anchors the legend wrapper AT margin.top, so growing
+                the margin moves the legend down with the plot and never
+                separates them. Pinning the wrapper to y=0 puts the legend in
+                the reserved strip above the plot instead. */}
+            <Legend verticalAlign="top" align="left" wrapperStyle={{ top: 0, left: 4 }} />
             <Area dataKey="goneBuyer" name="Buyer: spent and gone" stroke="#0f172a" fill="#94a3b8" fillOpacity={0.85} isAnimationActive={false} />
             <Area dataKey="keptBuyer" name="Buyer: principal retained" stroke="#15803d" fill="#86efac" fillOpacity={0.85} isAnimationActive={false} />
             {/* PRD chart 5: the renter half of the comparison. */}

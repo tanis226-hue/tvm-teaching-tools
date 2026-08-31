@@ -4,15 +4,18 @@
 
 | | |
 |---|---|
-| Start a class session | https://tvm-tools.netlify.app/instructor |
-| Rent vs buy (projector) | https://tvm-tools.netlify.app/rentbuy |
+| Retirement calculator (students, anytime) | https://tvm-tools.netlify.app/retirement |
+| Rent vs buy (students and projector) | https://tvm-tools.netlify.app/rentbuy |
+| Start a class session (instructor) | https://tvm-tools.netlify.app/instructor |
 | Netlify admin | https://app.netlify.com/projects/tvm-tools |
 | Neon project | `tvm-teaching-tools`, region `aws-us-east-1` |
 
-Two web tools for a first-semester Business Mathematics course at FGCU.
+Two web tools for a first-semester Business Mathematics course at FSW (Florida SouthWestern State College). Free to use, no sign-in, nothing to install.
 
-- **Module 1, Retirement calculator.** Student-facing and mobile-first, reached by QR code during lecture. Anonymous submissions aggregate to a live instructor dashboard.
-- **Module 2, Rent vs buy explorer.** Instructor-driven from the front with sliders. Surfaces a breakeven year and lets you move it. No database, no poll.
+- **Module 1, Retirement calculator.** Student-facing and mobile-first. During a lecture it is reached by QR code and can send an anonymous answer to a live instructor dashboard. Outside of a lecture, `/retirement` is the same calculator with the submit step removed, so a student can revisit it any time.
+- **Module 2, Rent vs buy explorer.** Slider-driven. Surfaces a breakeven year and lets you move it. No database, no session, so students can open it directly too.
+
+Both student-facing pages are static and hit no database. Only the class-session flow (`/instructor`, `/s/[code]`, `/d/[code]`) needs `DATABASE_URL`.
 
 ## Running it
 
@@ -87,7 +90,9 @@ every student's row.
 
 The three moments land in a fixed order and the UI enforces it: the inflated income first, then the lump sum, then the monthly contribution. Do not reorder them. The first two numbers are supposed to be alarming so the third one feels like relief.
 
-**Module 2.** Open `/rentbuy`. Take a hands-up straw poll first ("who thinks renting is smarter?"), then let the tool answer. Start on the Fort Myers preset, then switch to National to show the same decision flipping on local assumptions. The point is that the breakeven moves, not that either side wins.
+**Module 2.** Open `/rentbuy`. Take a hands-up straw poll first ("who thinks renting is smarter?"), then let the tool answer. It opens on **National**, which breaks even at 9.3 years and gives the class a working baseline. Then switch to **Fort Myers**, where with sourced Lee County numbers it never breaks even. The contrast is the lesson: same arithmetic, same decision, different answer because of where you live.
+
+**Afterwards.** Point students at `/retirement` and `/rentbuy` directly. Both work with no session code, no sign-in, and nothing saved, so they can keep playing with the numbers on their own. The retirement page in practice mode is the identical calculator with only the "send to class" step removed, so the figures they get at home match the lecture exactly.
 
 ## Before each semester
 

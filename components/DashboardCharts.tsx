@@ -28,7 +28,7 @@ export function DashboardCharts({ rows }: { rows: SubmissionRow[] }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <section className="rounded-2xl border-2 border-slate-300 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-2xl font-bold text-slate-800">What the class wants to live on</h2>
         <p className="mt-1 text-base text-slate-500">Desired monthly income, today&apos;s dollars.</p>
         <div className="mt-4 h-80">
@@ -38,13 +38,13 @@ export function DashboardCharts({ rows }: { rows: SubmissionRow[] }) {
               <XAxis dataKey="label" fontSize={18} />
               <YAxis allowDecimals={false} fontSize={18} width={40} />
               <Tooltip />
-              <Bar dataKey="count" name="Students" fill="#0f172a" isAnimationActive={false} />
+              <Bar dataKey="count" name="Students" fill="#470a68" isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </section>
 
-      <section className="rounded-2xl border-2 border-slate-300 bg-white p-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-2xl font-bold text-slate-800">Retire earlier, save more</h2>
         <p className="mt-1 text-base text-slate-500">
           Each dot is one anonymous answer.
@@ -63,7 +63,7 @@ export function DashboardCharts({ rows }: { rows: SubmissionRow[] }) {
               />
               <ZAxis range={[300, 300]} />
               <Tooltip formatter={tipMoney} />
-              <Scatter data={scatter} fill="#1d4ed8" isAnimationActive={false} />
+              <Scatter data={scatter} fill="#00bfaa" stroke="#009684" strokeWidth={1} isAnimationActive={false} />
             </ScatterChart>
           </ResponsiveContainer>
         </div>

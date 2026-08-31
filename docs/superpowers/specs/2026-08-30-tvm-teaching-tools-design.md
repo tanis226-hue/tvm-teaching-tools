@@ -1,7 +1,7 @@
 # Time Value of Money Teaching Tools - Design
 
 **Date:** 2026-08-30
-**Course:** Business Mathematics (first-semester freshmen), FGCU
+**Course:** Business Mathematics (first-semester freshmen), FSW
 **Status:** Implemented, then substantially revised on 2026-08-30 after a defaults audit.
 
 > **Revision 2, 2026-08-30.** Two changes re-base almost every number below.

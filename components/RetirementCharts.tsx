@@ -8,7 +8,7 @@ import {
   accumulationSeries, drawdownSeries, costOfWaiting,
   purchasingPowerSeries, type RetirementInput,
 } from '@/lib/retirement'
-import { LIFE_EXPECTANCY, ESTATE_RESIDUAL } from '@/lib/assumptions'
+import { LIFE_EXPECTANCY, ESTATE_RESIDUAL, INFLATION } from '@/lib/assumptions'
 import { usd } from '@/lib/format'
 import { ChartFrame } from './ChartFrame'
 
@@ -55,7 +55,7 @@ export function RetirementCharts({ input }: { input: RetirementInput }) {
 
       <ChartFrame
         title="What $1 today will be worth"
-        note={`3% inflation, from age ${input.currentAge} to ${LIFE_EXPECTANCY}.`}
+        note={`${(INFLATION * 100).toFixed(1)}% inflation, from age ${input.currentAge} to ${LIFE_EXPECTANCY}.`}
       >
         <ResponsiveContainer>
           <LineChart data={power}>

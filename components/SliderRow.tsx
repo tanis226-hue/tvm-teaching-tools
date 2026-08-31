@@ -15,7 +15,7 @@ export function SliderRow({
       <input
         type="range" value={value} min={min} max={max} step={step}
         onChange={e => onChange(Number(e.target.value))}
-        className="mt-1 w-full accent-slate-900"
+        className="mt-1 w-full accent-brand"
       />
     </label>
   )

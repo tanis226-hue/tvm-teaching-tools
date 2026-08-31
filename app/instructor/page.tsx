@@ -52,7 +52,7 @@ export default function InstructorPage() {
           <button
             onClick={start}
             disabled={pending}
-            className="mt-8 rounded-xl bg-slate-900 px-8 py-4 text-xl font-semibold text-white disabled:bg-slate-400"
+            className="mt-8 rounded-xl bg-brand px-8 py-4 text-xl font-semibold text-white shadow-sm transition-colors hover:bg-brand-dark disabled:bg-slate-400"
           >
             {pending ? 'Starting...' : 'Start a class session'}
           </button>
@@ -63,10 +63,10 @@ export default function InstructorPage() {
           <p className="text-2xl text-slate-600">Scan to join</p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={qr} alt="" className="mx-auto w-80" />
-          <p className="font-mono text-7xl font-bold tracking-widest text-slate-900">{code}</p>
+          <p className="font-mono text-7xl font-bold tracking-widest text-brand">{code}</p>
           <a
             href={`/d/${code}`}
-            className="inline-block rounded-xl border-2 border-slate-900 px-6 py-3 text-lg font-semibold"
+            className="inline-block rounded-xl border-2 border-brand px-6 py-3 text-lg font-semibold text-brand transition-colors hover:bg-brand-tint"
           >
             Open the results dashboard
           </a>

@@ -105,3 +105,37 @@ always `Number(...)` before arithmetic on submission columns.
 
 For one-off SQL use `sql.query(text)`; the bare tagged template only accepts template
 literals.
+
+## Branding
+
+FSW = Florida SouthWestern State College. Brand colors are FSW Purple `#470a68`
+and Aqua `#00bfaa`, published on fsw.edu. They live as `--color-brand*` and
+`--color-accent*` in `app/globals.css`; use the `brand`/`accent` Tailwind
+utilities, never raw `slate-900`, for primary actions and active states.
+
+The header mark is a lettermark, not FSW's official seal. Their licensing page
+restricts the trademarked logo to marketing-approved licensees, so do not
+scrape and embed it. If the college supplies an approved asset, drop it in
+`public/` and swap it into `components/SiteHeader.tsx`.
+
+Do not confuse FSW with FGCU. Two `FGCU RERI` citations in `lib/mortgage.ts`
+and the README are correct: that is Florida Gulf Coast University's Regional
+Economic Research Institute, the source for the Lee County price figure, and a
+different institution from the one that teaches this course.
+
+## Student access
+
+`/retirement` and `/rentbuy` must stay reachable with no session code, no
+sign-in, and no database. Both build as static pages; keep them that way.
+`components/RetirementCalculator.tsx` is shared by `/retirement` (practice) and
+`/s/[code]` (in class) so the numbers a student sees at home cannot drift from
+the lecture. Add features to the component, not to one route.
+
+## Recharts layout
+
+Recharts anchors the legend wrapper AT `margin.top` (or bottom), so the legend
+and an `insideBottom` axis label move together and no margin value separates
+them. The working combination is `verticalAlign="top"` plus
+`wrapperStyle={{ top: 0 }}` for the legend, and `position="bottom"` for the
+x-axis label. Verify by measuring `getBoundingClientRect()` overlap between
+every `<text>` pair, not by eye.

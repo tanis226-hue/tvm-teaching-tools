@@ -3,6 +3,17 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* FSW brand colors (Purple RGB 71,10,104 / Aqua RGB 0,191,170), published at
+     fsw.edu brand guidelines. White text on --color-brand is ~13.9:1 contrast;
+     --color-accent is reserved for fills and small chips, not body text on
+     white, since it only clears ~2.3:1 there. */
+  --color-brand: #470a68;
+  --color-brand-dark: #34074c;
+  --color-brand-tint: #f6eefa;
+  --color-accent: #00bfaa;
+  --color-accent-dark: #009684;
+  --color-accent-tint: #e5faf7;
 }
 
 /* No prefers-color-scheme switch. This is projected in a lecture hall and

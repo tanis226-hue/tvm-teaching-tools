@@ -18,7 +18,7 @@ const MAX_POLL_MS = 3 * 60 * 60 * 1000
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border-2 border-slate-300 bg-white p-6">
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <p className="text-lg text-slate-500">{label}</p>
       <p className="mt-1 text-4xl font-bold tabular-nums text-slate-900">{value}</p>
     </div>
@@ -119,7 +119,7 @@ export default function DashboardPage({ params }: { params: Promise<{ code: stri
       {error && <p className="text-center text-xl text-red-600">{error}</p>}
 
       {closed && (
-        <p className="rounded-2xl border-2 border-slate-900 bg-slate-900 p-4 text-center text-xl font-semibold text-white">
+        <p className="rounded-2xl border-2 border-brand bg-brand p-4 text-center text-xl font-semibold text-white shadow-sm">
           Session closed. No further submissions will be accepted.
         </p>
       )}
@@ -128,7 +128,7 @@ export default function DashboardPage({ params }: { params: Promise<{ code: stri
         <div className="text-center">
           <button
             onClick={closeSession}
-            className="rounded-xl border-2 border-slate-400 px-6 py-2 text-base font-semibold text-slate-700"
+            className="rounded-xl border-2 border-slate-400 px-6 py-2 text-base font-semibold text-slate-700 transition-colors hover:bg-slate-50"
           >
             Close session
           </button>
@@ -142,7 +142,7 @@ export default function DashboardPage({ params }: { params: Promise<{ code: stri
           </p>
           <button
             onClick={() => setStopped(false)}
-            className="mt-3 rounded-xl border-2 border-slate-900 px-6 py-3 text-lg font-semibold"
+            className="mt-3 rounded-xl border-2 border-brand px-6 py-3 text-lg font-semibold text-brand transition-colors hover:bg-brand-tint"
           >
             Resume
           </button>
