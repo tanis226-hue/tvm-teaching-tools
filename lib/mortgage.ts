@@ -24,8 +24,8 @@ export type RentBuyInput = {
    */
   maintAnnual: number
   insAnnual: number
+  /** Zero means "not in a flood zone". No separate toggle: one fact, one field. */
   floodAnnual: number
-  includeFlood: boolean
   hoaMonthly: number
   apprPct: number
   /** % of the ORIGINAL loan amount per year, not the declining balance. */
@@ -122,7 +122,7 @@ export function simulateRentBuy(input: RentBuyInput): RentBuyResult {
 
   // Year-1 dollar costs, grown at inflation. Not rates on a compounding value.
   const upkeepBase =
-    (input.maintAnnual + input.insAnnual + (input.includeFlood ? input.floodAnnual : 0)) / 12
+    (input.maintAnnual + input.insAnnual + input.floodAnnual) / 12
 
   let homeValue = input.price
   let assessed = input.price // a sale resets assessed value to just value
@@ -239,11 +239,14 @@ export const FORT_MYERS: RentBuyInput = {
   price: 385_000, // Lee County median SF sale, Florida Realtors via FGCU RERI, Jul 2026
   closingSellPct: 0.067, // 5.25% commission + FL deed stamps 0.70% + title 0.52%
   taxMode: 'florida',
-  taxPct: 0.011,
+  // Unused while taxMode is 'florida'; kept as the flat-rate equivalent so the
+  // field is not carrying a wrong number if the mode is ever switched. 1.31% is
+  // what the homestead calculation actually produces in year 1.
+  taxPct: 0.0131,
   maintAnnual: 4_200, // JCHS 2025 (2023 AHS) uprated to 2026, +10% SW-FL premium
   insAnnual: 3_576, // FLOIR Property Insurance Stability Report, Jul 2026, Lee County
-  floodAnnual: 1_975, // FEMA NFIP median, Lee County SFHA single-family
-  includeFlood: true, // 74.7% of Lee County SF NFIP policies are in an SFHA
+  floodAnnual: 1_975, // FEMA NFIP median, Lee County SFHA single-family; 74.7%
+                      // of Lee County single-family NFIP policies are in an SFHA
   startingRent: 2_200, // Zillow ZORI SFR Cape Coral-Fort Myers, 2026-07-31
   rentersInsMonthly: 30,
   monthlyBudget: 3_600, // the buyer's month-1 outlay ($3,568) rounded up to a round number
@@ -264,8 +267,7 @@ export const NATIONAL: RentBuyInput = {
   // interpolated to $400,000 Coverage A = $1,638, trended to mid-2026 on
   // S&P Global approved rate changes = $2,014.
   insAnnual: 2_000,
-  floodAnnual: 0,
-  includeFlood: false,
+  floodAnnual: 0, // ~3-5% of US households carry NFIP, so off by default
   startingRent: 2_300, // Zillow ZORI SFR US, 2026-07-31
   rentersInsMonthly: 25,
   monthlyBudget: 3_300, // the buyer's month-1 outlay ($3,270) rounded up to a round number

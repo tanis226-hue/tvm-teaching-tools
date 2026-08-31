@@ -102,7 +102,7 @@ describe('the renter must be immune to the buyer recurring costs', () => {
     ['HOA $800/mo', { hoaMonthly: 800 }],
     ['property tax 3%', { taxPct: 0.03 }],
     ['maintenance $12k/yr', { maintAnnual: 12_000 }],
-    ['flood $6k/yr', { floodAnnual: 6_000, includeFlood: true }],
+    ['flood $6k/yr', { floodAnnual: 6_000 }],
     ['15-year term', { termYears: 15, rate: TERM_RATES[15] }],
   ])('is unmoved by %s', (_label, patch) => {
     expect(renterAt(patch)).toBeCloseTo(base, 4)
@@ -267,9 +267,9 @@ describe('inputs that have no slider still drive the model', () => {
       simulateRentBuy(FORT_MYERS).rows[599].buyerNetWorth,
     )
   })
-  it('drops flood when the toggle is off', () => {
-    const dry = simulateRentBuy({ ...FORT_MYERS, includeFlood: false })
-    expect(FORT_MYERS.includeFlood).toBe(true)
+  it('drops flood when set to zero', () => {
+    const dry = simulateRentBuy({ ...FORT_MYERS, floodAnnual: 0 })
+    expect(FORT_MYERS.floodAnnual).toBeGreaterThan(0)
     expect(dry.rows[0].upkeep * 12).toBeCloseTo(FORT_MYERS.maintAnnual + FORT_MYERS.insAnnual, 0)
   })
 })

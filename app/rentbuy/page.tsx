@@ -66,8 +66,6 @@ export default function RentBuyPage() {
   const effTaxYr1 = taxYear1 / input.price
   const effTaxYr50 = (lastRow.tax * 12) / lastRow.homeValue
   const priceToRent = input.price / (input.startingRent * 12)
-  const upkeepAnnual =
-    input.maintAnnual + input.insAnnual + (input.includeFlood ? input.floodAnnual : 0)
   const borrowable = Math.max(
     0,
     0.85 * result.rows[119].homeValue - result.rows[119].balance,
@@ -177,91 +175,95 @@ export default function RentBuyPage() {
             </div>
           </div>
 
-          {/* The budget both households live within. Without it, the renter's
-              saving was defined as the buyer's outlay minus their own, so
-              raising any buyer cost handed the renter cash. */}
-          <SliderRow label="Monthly budget for housing + saving" value={input.monthlyBudget}
-            min={1500} max={8000} step={25} format={n => `${usd(n)}/mo`}
-            onChange={set('monthlyBudget')} />
-
+          {/* The six that move the lesson. Everything else is real but is not
+              something an instructor reaches for mid-lecture, so it lives
+              behind the disclosure below rather than in a wall of sliders. */}
           <SliderRow label="Home price" value={input.price} min={150000} max={900000}
             step={5000} format={money} onChange={set('price')} />
           <SliderRow label="Mortgage rate" value={input.rate} min={0.03} max={0.1}
             step={0.0025} format={pctFmt} onChange={set('rate')} />
           <SliderRow label="Starting rent" value={input.startingRent} min={1000} max={5000}
             step={50} format={money} onChange={set('startingRent')} />
-          <SliderRow label="Rent increase" value={input.rentIncreasePct} min={0} max={0.08}
-            step={0.0025} format={pctFmt} onChange={set('rentIncreasePct')} />
           <SliderRow label="Home appreciation" value={input.apprPct} min={0} max={0.08}
             step={0.0025} format={pctFmt} onChange={set('apprPct')} />
           <SliderRow label="Closing costs to sell" value={input.closingSellPct} min={0} max={0.1}
             step={0.005} format={pctFmt} onChange={set('closingSellPct')} />
-          <SliderRow
-            label={`Investment return (${(RETURN_PRE * 100).toFixed(1)}% gross, as in the retirement module)`}
-            value={input.investReturn} min={0.02} max={0.12}
-            step={0.0025} format={pctFmt} onChange={set('investReturn')} />
 
-          {/* Dollars, not percentages of a compounding value. */}
-          <SliderRow label="Maintenance" value={input.maintAnnual} min={0} max={12000}
-            step={100} format={perYear} onChange={set('maintAnnual')} />
-          <SliderRow label="Homeowners insurance" value={input.insAnnual} min={0} max={12000}
-            step={100} format={perYear} onChange={set('insAnnual')} />
+          <details className="group rounded-xl border border-slate-200 bg-slate-50">
+            <summary className="cursor-pointer list-none px-3 py-2 text-sm font-semibold text-brand">
+              <span className="group-open:hidden">Show the other assumptions</span>
+              <span className="hidden group-open:inline">Hide the other assumptions</span>
+            </summary>
 
-          {/* A slider, not a toggle. As a toggle this did nothing on the
-              National preset, where floodAnnual is $0 either way. Dragging it
-              off zero is now the same gesture as "this home is in a flood
-              zone", and it always visibly moves the model. */}
-          <div>
-            <SliderRow
-              label="Flood insurance" value={input.includeFlood ? input.floodAnnual : 0}
-              min={0} max={6000} step={125}
-              format={n => (n === 0 ? 'None' : `${usd(n)}/yr`)}
-              onChange={n =>
-                setInput(prev => ({ ...prev, floodAnnual: n, includeFlood: n > 0 }))
-              }
-            />
-            <p className="mt-1 text-xs text-slate-500">
-              Three in four Lee County single-family flood policies are in a mapped zone.
-              Nationally it is closer to one in twenty.
-            </p>
-          </div>
+            <div className="space-y-4 border-t border-slate-200 px-3 py-3">
+              <SliderRow label="Monthly budget for housing + saving" value={input.monthlyBudget}
+                min={1500} max={8000} step={25} format={n => `${usd(n)}/mo`}
+                onChange={set('monthlyBudget')} />
+              <SliderRow label="Rent increase" value={input.rentIncreasePct} min={0} max={0.08}
+                step={0.0025} format={pctFmt} onChange={set('rentIncreasePct')} />
+              <SliderRow
+                label={`Investment return (${(RETURN_PRE * 100).toFixed(1)}% gross, as in the retirement module)`}
+                value={input.investReturn} min={0.02} max={0.12}
+                step={0.0025} format={pctFmt} onChange={set('investReturn')} />
 
-          {input.taxMode === 'flat' ? (
-            <SliderRow label="Property tax" value={input.taxPct} min={0} max={0.03}
-              step={0.001} format={pctFmt} onChange={set('taxPct')} />
-          ) : (
-            <div className="rounded-xl border-l-4 border-accent bg-accent-tint p-3">
-              <p className="text-sm font-semibold text-slate-700">Property tax: Florida homestead</p>
-              <p className="mt-1 text-sm font-medium tabular-nums text-slate-900">
-                {usd(taxYear1)} in year 1, {pctFmt(effTaxYr1)} of value
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Save Our Homes caps assessed growth at 3%, so the effective rate falls to{' '}
-                {pctFmt(effTaxYr50)} by year {HORIZON_YEARS}. Lee County median millage.
-              </p>
-            </div>
-          )}
+              {/* Dollars, not percentages of a compounding value. */}
+              <SliderRow label="Maintenance" value={input.maintAnnual} min={0} max={12000}
+                step={100} format={perYear} onChange={set('maintAnnual')} />
+              <SliderRow label="Homeowners insurance" value={input.insAnnual} min={0} max={12000}
+                step={100} format={perYear} onChange={set('insAnnual')} />
+              <div>
+                <SliderRow
+                  label="Flood insurance" value={input.floodAnnual}
+                  min={0} max={6000} step={125}
+                  format={n => (n === 0 ? 'Not in a flood zone' : `${usd(n)}/yr`)}
+                  onChange={set('floodAnnual')}
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  Three in four Lee County single-family flood policies are in a mapped zone.
+                  Nationally it is closer to one in twenty.
+                </p>
+              </div>
 
-          <SliderRow label="HOA" value={input.hoaMonthly} min={0} max={800}
-            step={25} format={money} onChange={set('hoaMonthly')} />
-
-          <div className="rounded-xl border-l-4 border-accent bg-accent-tint p-3">
-            <p className="text-sm font-semibold text-slate-700">Fixed, not adjustable</p>
-            <dl className="mt-1 space-y-0.5">
-              {[
-                ['Closing costs to buy', pctFmt(input.closingBuyPct)],
-                ['PMI (under 20% down)', `${pctFmt(input.pmiPct)}/yr of loan`],
-                ['Renters insurance', `${usd(input.rentersInsMonthly)}/mo`],
-                ['Inflation', pctFmt(INFLATION)],
-                ['Horizon', `${HORIZON_YEARS} years`],
-              ].map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-3">
-                  <dt className="text-sm text-slate-600">{k}</dt>
-                  <dd className="text-sm font-medium tabular-nums text-slate-900">{v}</dd>
+              {input.taxMode === 'flat' ? (
+                <SliderRow label="Property tax" value={input.taxPct} min={0} max={0.03}
+                  step={0.001} format={pctFmt} onChange={set('taxPct')} />
+              ) : (
+                <div className="rounded-xl border-l-4 border-accent bg-accent-tint p-3">
+                  <p className="text-sm font-semibold text-slate-700">
+                    Property tax: Florida homestead
+                  </p>
+                  <p className="mt-1 text-sm font-medium tabular-nums text-slate-900">
+                    {usd(taxYear1)} in year 1, {pctFmt(effTaxYr1)} of value
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Save Our Homes caps assessed growth at 3%, so the effective rate falls to{' '}
+                    {pctFmt(effTaxYr50)} by year {HORIZON_YEARS}. Lee County median millage.
+                  </p>
                 </div>
-              ))}
-            </dl>
-          </div>
+              )}
+
+              <SliderRow label="HOA" value={input.hoaMonthly} min={0} max={800}
+                step={25} format={money} onChange={set('hoaMonthly')} />
+
+              <div className="rounded-xl border-l-4 border-accent bg-accent-tint p-3">
+                <p className="text-sm font-semibold text-slate-700">Fixed, not adjustable</p>
+                <dl className="mt-1 space-y-0.5">
+                  {[
+                    ['Closing costs to buy', pctFmt(input.closingBuyPct)],
+                    ['PMI (under 20% down)', `${pctFmt(input.pmiPct)}/yr of loan`],
+                    ['Renters insurance', `${usd(input.rentersInsMonthly)}/mo`],
+                    ['Inflation', pctFmt(INFLATION)],
+                    ['Horizon', `${HORIZON_YEARS} years`],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-3">
+                      <dt className="text-sm text-slate-600">{k}</dt>
+                      <dd className="text-sm font-medium tabular-nums text-slate-900">{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
+          </details>
         </aside>
 
         <div className="space-y-6">
@@ -317,27 +319,14 @@ export default function RentBuyPage() {
               money from a bank, so almost nothing is being retained yet.
             </Callout>
 
-            <Callout title="Upkeep is a dollar cost, not a share of the price">
-              Maintenance and insurance come to {usd(upkeepAnnual)} a year here and grow with
-              inflation, not with the house. About 40 cents of every dollar of a home&apos;s value
-              is land, and land needs no roof and no premium. Property tax is the one cost that
-              does follow market value, and in Florida even that is capped.
-            </Callout>
-
-            <Callout title="Both households live on the same budget">
-              Each one has {usd(input.monthlyBudget)} a month for housing plus saving, growing
-              with inflation, and invests whatever housing does not eat at{' '}
-              {pctFmt(input.investReturn)}. That is what makes this a fair comparison. It also
-              means raising a buyer cost no longer hands the renter money: drag the mortgage
-              rate or the HOA and watch the red line stay exactly where it is while the blue one
-              falls. The buyer pays for it, which is who actually pays for it.
-            </Callout>
-
-            <Callout title="Where it still favors the renter">
-              It assumes the renter invests every spare dollar, every month, and never once
-              spends it. Almost nobody does that; a mortgage forces the saving. It also compares
-              a <em>pre-tax</em> brokerage return against a home gain that is tax-free up to
-              $250,000 under IRC §121. Drag the return to about 6.5% for the after-tax version.
+            <Callout title="Where this still favors the renter">
+              Both households live on the same {usd(input.monthlyBudget)} a month for housing
+              plus saving and invest whatever housing does not eat, which is what makes the
+              comparison fair. But it assumes the renter really does bank every spare dollar and
+              never spends it, and almost nobody does; a mortgage forces the saving. It also
+              compares a <em>pre-tax</em> brokerage return against a home gain that is tax-free
+              up to $250,000 under IRC §121. Drag the return to about 6.5% for the after-tax
+              version.
             </Callout>
 
             <Callout title="Transaction costs punish short holds">

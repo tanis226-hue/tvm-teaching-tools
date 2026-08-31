@@ -183,4 +183,4 @@ app/rentbuy          Module 2
 app/api              session create/close/results, submission
 ```
 
-`docs/superpowers/specs/` holds the design doc, including why the source PRD's Module 2 defaults were retuned. `docs/verification/` holds the throwaway models that produced the evidence.
+`docs/superpowers/specs/` holds the design doc: what the tool does now, and a changelog of the three model corrections and why each mattered. The original implementation plan and the throwaway verification scripts were deleted once they went stale; they are in git history if the reasoning is ever needed.
