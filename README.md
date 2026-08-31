@@ -17,6 +17,23 @@ Two web tools for a first-semester Business Mathematics course at FSW (Florida S
 
 Both student-facing pages are static and hit no database. Only the class-session flow (`/instructor`, `/s/[code]`, `/d/[code]`) needs `DATABASE_URL`.
 
+## Using this in your own course
+
+It is MIT licensed. Two ways in, and the first needs nothing from you:
+
+1. **Send students straight to the links.** `/retirement` and `/rentbuy` are static
+   pages with no sign-in, no database and nothing saved. Put them on a slide or a QR
+   code and you are done. Every default is sourced and dated in the table below, so
+   you can see exactly what the numbers assume before you show them to a class.
+2. **Fork it and run your own class sessions.** The live dashboard writes to a
+   database, so point it at your own free Neon project rather than sharing this one:
+   clone, apply `db/schema.sql`, set `DATABASE_URL`, deploy. That also lets you change
+   the presets to your own housing market, which is the part most worth localising.
+
+The Fort Myers preset is Lee County, Florida. If you teach somewhere else, replace the
+price, rent, insurance and property tax in `lib/mortgage.ts` with your own metro's
+numbers and the lesson lands harder.
+
 ## Running it
 
 ```bash
@@ -65,6 +82,14 @@ node --env-file=.env.local -e "const{neon}=require('@neondatabase/serverless');c
 Nothing personally identifying is collected or stored: no names, no student IDs, no emails,
 no IP addresses. Submissions carry three inputs, a match rate and three computed outputs.
 
+Class data is deleted after **seven days**. `RETENTION_DAYS` in `lib/db.ts` drives both
+halves: starting a session first purges every session older than the window, and deleting
+a session cascades to its submissions. `getSession` also filters on the same window, which
+is what makes the guarantee hold between purges: an expired code 404s on submit and on the
+dashboard whether or not anyone has started a session lately. The purge rides on session
+creation rather than a cron or scheduled function, so there is no extra infrastructure to
+run and an idle database keeps its last week and stops growing.
+
 A per-session browser id in `localStorage` discourages accidental double-submits from the
 same phone; it is not a real identity check, since the value is client-supplied. The actual
 flood protection is the 300-row cap per session in `lib/db.ts` plus the four-hour write
@@ -82,7 +107,8 @@ every student's row.
   `sessionStorage`, which is what makes the dashboard's **Close session** button work.
   Closing a session is permanent; there is no reopen path.
 - Sessions stop accepting submissions four hours after creation, so an old code cannot be
-  written to later in the term.
+  written to later in the term, and the rows are deleted seven days after that. Export
+  anything you want to keep before the week is out; there is no archive.
 
 ## Classroom workflow
 
@@ -182,5 +208,10 @@ app/instructor       session launcher and QR code
 app/rentbuy          Module 2
 app/api              session create/close/results, submission
 ```
+
+## License
+
+MIT, see `LICENSE`. Use it, fork it, change the numbers, teach with it. No attribution
+required, though a note saying you used it is always welcome.
 
 `docs/superpowers/specs/` holds the design doc: what the tool does now, and a changelog of the three model corrections and why each mattered. The original implementation plan and the throwaway verification scripts were deleted once they went stale; they are in git history if the reasoning is ever needed.

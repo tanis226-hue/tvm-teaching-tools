@@ -35,7 +35,25 @@ export type SubmissionRow = {
   created_at: string
 }
 
+// Class data is disposable. Writes already stop four hours after a session is
+// created (app/api/submit/route.ts); this is when the rows actually go away.
+export const RETENTION_DAYS = 7
+
+// Deleting the session cascades to its submissions. Called on session
+// creation rather than from a cron or scheduled function: it needs no extra
+// infrastructure and it runs exactly when the app is being used. An idle
+// database keeps its last week and stops growing.
+export async function purgeExpiredSessions(): Promise<number> {
+  const rows = (await sql()`
+    delete from sessions
+    where created_at < now() - make_interval(days => ${RETENTION_DAYS})
+    returning id
+  `) as unknown as { id: string }[]
+  return rows.length
+}
+
 export async function createSession() {
+  await purgeExpiredSessions()
   const code = generateSessionCode()
   const instructorToken = crypto.randomUUID()
   await sql()`
@@ -44,9 +62,14 @@ export async function createSession() {
   return { code, instructorToken }
 }
 
+// The age filter, not just the purge, is what makes the retention window real:
+// it holds between purges, so an expired session 404s on submit and on the
+// dashboard whether or not anyone has started a session lately.
 export async function getSession(code: string): Promise<SessionRow | null> {
   const rows = (await sql()`
-    select id, code, closed_at, created_at from sessions where code = ${code.toUpperCase()}
+    select id, code, closed_at, created_at from sessions
+    where code = ${code.toUpperCase()}
+      and created_at >= now() - make_interval(days => ${RETENTION_DAYS})
   `) as unknown as SessionRow[]
   return rows[0] ?? null
 }

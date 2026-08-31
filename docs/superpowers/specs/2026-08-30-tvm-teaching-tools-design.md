@@ -146,6 +146,11 @@ Results are readable by session code without the instructor token: the code is
 already public on the projector and the data is anonymous by construction. The
 token gates only session closure, the single destructive action.
 
+Data is deleted after seven days. Starting a session purges every session past
+the window, deletion cascades to submissions, and `getSession` filters on the
+same window so an expired code 404s between purges. The purge rides on session
+creation, so there is no cron to run and an idle database stops growing.
+
 The dashboard polls every 8s, pauses while hidden, and stops after three hours.
 That cap is not cosmetic: Neon's free tier is 100 CU-hours a month, and a
 forgotten projector tab exhausts it in about two weeks, which suspends the
