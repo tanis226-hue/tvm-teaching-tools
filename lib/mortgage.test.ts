@@ -24,11 +24,11 @@ describe('Fort Myers preset', () => {
     near(r.rows[599].rent, 10858)
   })
   it('tracks net worth at years 3, 10, 30 and 50', () => {
-    near(r.rows[35].buyerNetWorth, 66712)
-    near(r.rows[35].renterNetWorth, 109108)
-    near(r.rows[359].buyerNetWorth, 1150329)
-    near(r.rows[599].buyerNetWorth, 4955935)
-    near(r.rows[599].renterNetWorth, 6708676)
+    near(r.rows[35].buyerNetWorth, 71537)
+    near(r.rows[35].renterNetWorth, 113933)
+    near(r.rows[359].buyerNetWorth, 2137437)
+    near(r.rows[599].buyerNetWorth, 10289640)
+    near(r.rows[599].renterNetWorth, 12042380)
   })
   // Documented deliberately: with sourced 2026 Lee County inputs the buyer does
   // not catch up inside the horizon. See README "What the Fort Myers preset says".
@@ -46,10 +46,10 @@ describe('National preset', () => {
     expect(r.settledAheadMonth).toBe(112)
   })
   it('tracks net worth at years 3, 10 and 50', () => {
-    near(r.rows[35].buyerNetWorth, 67971)
-    near(r.rows[119].buyerNetWorth, 231147)
-    near(r.rows[599].buyerNetWorth, 6240721)
-    near(r.rows[599].renterNetWorth, 4597064)
+    near(r.rows[35].buyerNetWorth, 72436)
+    near(r.rows[119].buyerNetWorth, 284513)
+    near(r.rows[599].buyerNetWorth, 10009412)
+    near(r.rows[599].renterNetWorth, 8365756)
   })
   it('grows rent from $2,300 to $11,352', () => {
     near(r.rows[0].rent, 2300)
@@ -67,12 +67,78 @@ describe('C5: upkeep must never touch the appreciating value', () => {
     expect(total(0.0375)).toBeCloseTo(total(0.08), 6)
     expect(total(0.0375)).toBeCloseTo(total(0), 6)
   })
-  it('makes buyer net worth strictly increase with appreciation', () => {
+  it('makes buyer net worth increase with appreciation across the realistic range', () => {
+    // From 2% up. Below that, property tax (which legitimately tracks market
+    // value) drags harder than the appreciation adds, so the curve dips. That
+    // is a real effect, not the upkeep bug this suite was written to catch, and
+    // C4 already forbids appreciation below inflation + 0.5pp anyway.
     let prev = -Infinity
-    for (const a of [0, 0.02, 0.0375, 0.05, 0.0625, 0.08]) {
+    for (const a of [0.02, 0.03, 0.0375, 0.05, 0.0625, 0.08]) {
       const nw = simulateRentBuy({ ...FORT_MYERS, apprPct: a }).rows[599].buyerNetWorth
       expect(nw).toBeGreaterThan(prev)
       prev = nw
+    }
+  })
+  it('shows the property-tax drag at implausibly low appreciation', () => {
+    // Documented so it is known behaviour rather than a surprise on the slider.
+    const flat = simulateRentBuy({ ...FORT_MYERS, apprPct: 0 }).rows[599].buyerNetWorth
+    const low = simulateRentBuy({ ...FORT_MYERS, apprPct: 0.02 }).rows[599].buyerNetWorth
+    expect(low).toBeLessThan(flat)
+  })
+})
+
+describe('the renter must be immune to the buyer recurring costs', () => {
+  // The reason the household budget was introduced. The old rule gave the
+  // renter `buyerOutlay - renterOutlay`, so raising any buyer cost handed them
+  // cash: an $800/mo HOA on a house they do not live in made them $5.2M richer
+  // by year 50, and a 10% mortgage rate left them 3.5x wealthier than 4%.
+  const renterAt = (o: Partial<RentBuyInput>) =>
+    simulateRentBuy({ ...NATIONAL, ...o }).rows[599].renterNetWorth
+  const base = renterAt({})
+
+  it.each([
+    ['mortgage rate 4%', { rate: 0.04 }],
+    ['mortgage rate 10%', { rate: 0.1 }],
+    ['HOA $800/mo', { hoaMonthly: 800 }],
+    ['property tax 3%', { taxPct: 0.03 }],
+    ['maintenance $12k/yr', { maintAnnual: 12_000 }],
+    ['flood $6k/yr', { floodAnnual: 6_000, includeFlood: true }],
+    ['15-year term', { termYears: 15, rate: TERM_RATES[15] }],
+  ])('is unmoved by %s', (_label, patch) => {
+    expect(renterAt(patch)).toBeCloseTo(base, 4)
+  })
+
+  it('DOES move with price, because the down payment it invests changes', () => {
+    // Not a leak: a pricier house means a bigger deposit, so the renter's
+    // month-0 lump sum is genuinely larger. That is the apples-to-apples premise.
+    expect(renterAt({ price: 900_000 })).toBeGreaterThan(base)
+  })
+
+  it('still lets renter-side inputs move the renter', () => {
+    expect(renterAt({ startingRent: 3_000 })).toBeLessThan(base)
+    expect(renterAt({ investReturn: 0.09 })).toBeGreaterThan(base)
+  })
+})
+
+describe('household budget and affordability', () => {
+  it('starts both presets affordable, with a little slack', () => {
+    for (const p of Object.values(PRESETS)) {
+      const r = simulateRentBuy(p)
+      expect(r.monthsOverBudget).toBe(0)
+      expect(r.rows[0].buyerOutlay).toBeLessThanOrEqual(p.monthlyBudget)
+    }
+  })
+  it('counts months the buyer cannot afford when rates rise', () => {
+    const at = (rate: number) => simulateRentBuy({ ...FORT_MYERS, rate }).monthsOverBudget
+    expect(at(0.05)).toBe(0)
+    expect(at(0.08)).toBeGreaterThan(0)
+    expect(at(0.1)).toBeGreaterThan(at(0.08))
+  })
+  it('leaves slack so a single slider step does not trip the warning', () => {
+    // The default rate is off the slider's 0.25% grid, so any nudge lands on a
+    // neighbouring step. Those must stay affordable or the warning cries wolf.
+    for (const rate of [0.065, 0.0675]) {
+      expect(simulateRentBuy({ ...NATIONAL, rate }).monthsOverBudget).toBe(0)
     }
   })
 })

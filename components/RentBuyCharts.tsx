@@ -154,7 +154,7 @@ export function RentBuyCharts({ input, result }: { input: RentBuyInput; result: 
         title="Net worth, both paths"
         note={
           result.breakevenMonth === null
-            ? `The blue line never gets above the red one. With these settings the renter who invests the difference stays ahead for the whole ${HORIZON_YEARS} years.`
+            ? `The blue line never gets above the red one. On the same household budget, the renter stays ahead for the whole ${HORIZON_YEARS} years.`
             : result.settledAheadMonth === null
               ? `Blue goes above red in year ${(result.breakevenMonth / 12).toFixed(1)}, but red takes the lead back in year ${(result.crossings.at(-1)! / 12).toFixed(1)} and holds it to year ${HORIZON_YEARS}. Buying wins the middle of this race and loses the end.`
               : reCrosses

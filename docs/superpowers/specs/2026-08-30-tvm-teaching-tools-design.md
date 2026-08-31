@@ -256,7 +256,9 @@ Every value below was sourced on 2026-08-30. Full citations are in the README.
 | Rent increase | 3.25% | 3.25% | appreciation less 0.5pp |
 | Renters insurance | $25/mo | $30/mo | dollars, inflating |
 | Investment return | 7.5% gross | 7.5% gross | shared with Module 1 |
+| **Monthly budget** | **$3,300** | **$3,600** | **housing + saving, year-1 dollars, inflating** |
 | **Resulting breakeven** | **9.3 yr** | **never** | |
+| Months over budget | 0 | 0 | defaults are affordable by construction |
 
 **Why maintenance and insurance are dollars.** Charging them as a percentage of the current market value compounds upkeep with appreciation. That is empirically wrong (about 40% of a home's value is land, per FHFA 2022, and land needs no roof or premium; revealed spending has an elasticity to value of roughly 0.5, not 1.0) and it produced a perverse model in which higher appreciation *reduced* the buyer's net worth. Property tax is the exception and legitimately tracks market value.
 
@@ -270,11 +272,19 @@ Apples-to-apples or the exercise is dishonest.
 
 - **PMI** applies only when the down payment is under 20%, and terminates when the balance reaches 78% of the **original purchase price** on the amortization schedule, per the Homeowners Protection Act. Terminating against the appreciated value instead (the original implementation) ended it at month 48 rather than 143 at 3.5% down, understated lifetime PMI by $11,846, and made the termination month move with the appreciation slider.
 - **Month 0:** buyer pays down payment plus purchase closing costs. Renter invests that identical sum at 7.5%.
-- **Each month:** buyer outlay is P&I + property tax + insurance + maintenance + HOA + PMI. Renter outlay is rent + renters insurance. Property tax, insurance and maintenance scale with the appreciating home value; P&I does not.
-- Whoever pays less that month invests the difference at 7.5%.
+- **Each month:** buyer outlay is P&I + property tax + insurance + maintenance + HOA + PMI. Renter outlay is rent + renters insurance. Property tax scales with the appreciating home value; insurance, maintenance and HOA are dollar costs growing at inflation; P&I does not move.
+- **Both households share one budget** for housing plus saving, `monthlyBudget`, in year-1 dollars growing at inflation. Each invests `budget - its own outlay` at 7.5%. The budget defaults to the buyer's month-1 outlay rounded up to a round number ($3,300 National, $3,600 Fort Myers), so the preset is affordable with a little slack. Sitting exactly on the edge meant a single slider step tripped the over-budget warning, because the default 6.66% rate is off the slider's 0.25% grid.
 - **Buyer net worth** = home value - mortgage balance - selling costs + investment balance.
 - **Renter net worth** = investment balance.
 - **Breakeven** = first month buyer net worth exceeds renter net worth.
+
+**The budget, added after review.** The original rule gave the renter `buyerOutlay - renterOutlay`, which quietly made the household budget a function of the *buyer's* costs. Raising any buyer cost then handed the renter cash they would never actually receive: an $800/mo HOA on a house the renter does not live in left them $5.2M richer by year 50, and a 10% mortgage rate left them 3.5x wealthier than a 4% one, with identical rent and identical behaviour.
+
+Anchoring an explicit budget breaks that causal link. The renter's outcome now depends only on renter-side inputs, which is verified by a test asserting their year-50 net worth is unmoved by mortgage rate, HOA, property tax, maintenance, flood and loan term. It still moves with `price`, and that is correct rather than a leak: a pricier house means a bigger deposit, so the renter's month-0 lump sum genuinely is larger.
+
+The change also surfaces affordability, which is what a rate rise does in reality. At 8% the Fort Myers buyer is over budget for 55 months and at 10% for 139, and the UI says so instead of silently letting the buyer borrow the difference. National's breakeven is unchanged at month 112; Fort Myers still never breaks even.
+
+One consequence worth knowing: buyer net worth is no longer strictly monotonic in appreciation. Below about 2%, property tax (which legitimately tracks market value) drags harder than the appreciation adds, so the curve dips. That is a real effect, not the upkeep bug of the previous revision, and C4 forbids appreciation that low anyway. It is covered by its own test so it stays known behaviour.
 
 **Crossings, added after review.** Reporting only the first crossing is wrong in 190 of 5,184 slider configurations (3.7%), where the paths cross more than once. In the worst case the tool announced "buying pulls ahead in year 5.3" for a run where the renter retook the lead in year 23.3 and held it for the remaining 27 years. The result therefore also carries `crossings` (every month the lead changes hands) and `settledAheadMonth` (the month after the last time the buyer is behind, or null). The headline reports **where the buyer stays ahead**, and names the four outcomes separately: never ahead, cleanly ahead, ahead after several swaps, and ahead in the middle but behind at the end.
 
@@ -301,7 +311,7 @@ This is a stronger lesson, not a weaker one: your rent already exceeds the mortg
 
 ### 6.5 Concept callouts
 
-- **Forced savings.** Every payment moves money into an asset you own; rent is 100% consumed. Most people do not actually invest the difference. The tool assumes they do, which favors the renter. Say this out loud in the UI.
+- **Forced savings.** Every payment moves money into an asset you own; rent is 100% consumed. Most people do not actually save the spare budget. The tool assumes they do, which favors the renter. Say this out loud in the UI.
 - **Payment lock-in.** A 30-year fixed rate is a hedge against rent inflation. Taxes and insurance still rise; principal and interest do not.
 - **Equity as accessible capital.** Show available equity over time, with a plain caution that borrowing against a home puts the home at risk.
 - **Transaction costs punish short holds.** At a 3-year hold the buyer is $16,294 behind (Fort Myers preset; $17,759 National). This is why breakeven year matters more than the 30-year figure.
@@ -314,18 +324,20 @@ This is a stronger lesson, not a weaker one: your rent already exceeds the mortg
 | Cash to close | $48,000 | $46,200 |
 | P&I, flat | $2,313 | $2,227 |
 | Breakeven | month 112 (9.3 yr) | none within 50 years |
+| Household budget | $3,300/mo | $3,600/mo |
 | Total interest, 30 yr | $472,845 | $455,113 |
 | Payment 1 principal / interest | $315 / $1,998 | $304 / $1,923 |
 | Property tax, year 1 | $4,012 (1.00%, flat) | $5,030 (1.31%, falling to 0.73%) |
 | PMI | $114/mo, ends month 110 | $110/mo, ends month 110, $12,070 total |
 | Rent yr 1 → yr 50 | $2,300 → $11,352 | $2,200 → $10,858 |
-| Buyer NW yr 3 / 10 / 50 | $67,971 / $231,147 / $6,240,721 | $66,712 / $224,148 / $4,955,935 |
-| Renter NW yr 50 | $4,597,064 | $6,708,676 |
+| Buyer NW yr 3 / 10 / 50 | $72,436 / $284,513 / $10,009,412 | $71,537 / $280,148 / $10,289,640 |
+| Renter NW yr 50 | $8,365,756 | $12,042,380 |
 | Price to rent | 14.5x | 14.6x |
 
 The Module 2 suite asserts constraints, not only values, so a future edit cannot silently reintroduce the bug class that was just removed:
 
 - Lifetime maintenance and insurance must be **identical** at 3.75% and 8% appreciation.
+- The renter's year-50 net worth must be **unmoved** by mortgage rate, HOA, property tax, maintenance, flood or loan term. It may move with price, since the deposit they invest changes.
 - Buyer net worth must **increase monotonically** with appreciation.
 - Property tax must be the **only** cost that varies with market value.
 - PMI must terminate, be constant month to month, and never be charged at 20% down.

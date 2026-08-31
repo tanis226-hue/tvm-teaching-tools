@@ -79,7 +79,7 @@ export default function RentBuyPage() {
       ? {
           lead: 'Buying pulls ahead after',
           figure: 'never',
-          detail: `The renter who invests the difference stays ahead for all ${HORIZON_YEARS} years.`,
+          detail: `On the same budget, the renter stays ahead for all ${HORIZON_YEARS} years.`,
         }
       : settled === null
         ? {
@@ -177,6 +177,13 @@ export default function RentBuyPage() {
             </div>
           </div>
 
+          {/* The budget both households live within. Without it, the renter's
+              saving was defined as the buyer's outlay minus their own, so
+              raising any buyer cost handed the renter cash. */}
+          <SliderRow label="Monthly budget for housing + saving" value={input.monthlyBudget}
+            min={1500} max={8000} step={25} format={n => `${usd(n)}/mo`}
+            onChange={set('monthlyBudget')} />
+
           <SliderRow label="Home price" value={input.price} min={150000} max={900000}
             step={5000} format={money} onChange={set('price')} />
           <SliderRow label="Mortgage rate" value={input.rate} min={0.03} max={0.1}
@@ -272,6 +279,17 @@ export default function RentBuyPage() {
             ))}
           </div>
 
+          {result.monthsOverBudget > 0 && (
+            <p className="rounded-2xl border-2 border-red-500 bg-red-50 p-4 text-base text-red-900">
+              This house is over budget for {result.monthsOverBudget} of{' '}
+              {HORIZON_YEARS * 12} months. At {pctFmt(input.rate)} the payment plus taxes,
+              insurance and upkeep comes to {usd(yr1.buyerOutlay)} against a{' '}
+              {usd(input.monthlyBudget)} budget. In real life the buyer does not borrow the
+              difference, they buy a cheaper house or keep renting. That is what a rate rise
+              actually does.
+            </p>
+          )}
+
           {(priceToRent < 10 || priceToRent > 22) && (
             <p className="rounded-2xl border-2 border-amber-500 bg-amber-50 p-4 text-base text-amber-900">
               Price-to-rent is {priceToRent.toFixed(1)}x. Real markets sit between about 10x and
@@ -306,12 +324,20 @@ export default function RentBuyPage() {
               does follow market value, and in Florida even that is capped.
             </Callout>
 
-            <Callout title="This model favors the renter">
-              The red line in <em>Net worth</em> assumes the renter invests every dollar of the
-              difference, every month, at {pctFmt(input.investReturn)}, and never once spends it.
-              Almost nobody does that. It also compares a <em>pre-tax</em> brokerage return
-              against a home gain that is tax-free up to $250,000 under IRC §121. Drag the return
-              to about 6.5% to see the after-tax version.
+            <Callout title="Both households live on the same budget">
+              Each one has {usd(input.monthlyBudget)} a month for housing plus saving, growing
+              with inflation, and invests whatever housing does not eat at{' '}
+              {pctFmt(input.investReturn)}. That is what makes this a fair comparison. It also
+              means raising a buyer cost no longer hands the renter money: drag the mortgage
+              rate or the HOA and watch the red line stay exactly where it is while the blue one
+              falls. The buyer pays for it, which is who actually pays for it.
+            </Callout>
+
+            <Callout title="Where it still favors the renter">
+              It assumes the renter invests every spare dollar, every month, and never once
+              spends it. Almost nobody does that; a mortgage forces the saving. It also compares
+              a <em>pre-tax</em> brokerage return against a home gain that is tax-free up to
+              $250,000 under IRC §121. Drag the return to about 6.5% for the after-tax version.
             </Callout>
 
             <Callout title="Transaction costs punish short holds">
@@ -375,7 +401,9 @@ Each month:
            balance / ORIGINAL price > 78% and down% < 20%
   buyer  = P&I + tax + upkeep + HOA + PMI   (P&I is zero after month N)
   renter = rent + renters insurance
-  whoever pays less invests the difference at i
+  budget = ${Math.round(input.monthlyBudget)} x (1+p)^(m-1)
+  each side invests (budget - its own outlay) at i
+  so the renter's result never depends on what the buyer spends
 
   buyer net worth  = value - balance - value x sell closing% + buyer investments
   renter net worth = renter investments

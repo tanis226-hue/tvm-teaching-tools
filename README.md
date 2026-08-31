@@ -27,7 +27,7 @@ npm run dev
 Module 2 and all the math run with no configuration. Only Module 1's class aggregation needs a database.
 
 ```bash
-npm test        # 104 tests: published worked examples plus model constraints
+npm test        # 117 tests: published worked examples plus model constraints
 npm run build
 ```
 
@@ -112,9 +112,9 @@ market rates and the local rent.
 | FM maintenance / insurance / flood | $4,200 / $3,576 / $1,975 per yr | JCHS 2025 (2023 AHS); FLOIR Jul 2026; FEMA NFIP Lee County | `lib/mortgage.ts` |
 | PMI | 0.38%/yr of original loan | Enact national BPMI card, upd. 2025-07-17 | `lib/mortgage.ts` |
 | Seller closing costs | 6.7% FM / 7.0% NAT | Redfin Q3 2025 commissions 5.25%; FL doc stamps + title | `lib/mortgage.ts` |
-
 | NAT property tax | 1.00% | ATTOM 2025 Annual Property Tax Analysis, reconciled with NAHB/ACS 2024 | `lib/mortgage.ts` |
 | NAT homeowners insurance | $2,000/yr | NAIC Homeowners Report (2023 data, pub. Jul 2026), HO-3 at $400k Coverage A, trended to mid-2026 | `lib/mortgage.ts` |
+| Household budget | $3,300 NAT / $3,600 FM | the buyer's month-1 outlay, rounded up | `lib/mortgage.ts` |
 
 **Two ranges worth saying out loud in class.** Property tax: Hawaii is about a third of a
 percent, Illinois and New Jersey about 1.8 to 1.9. The same $400,000 house costs $1,300 a
@@ -137,6 +137,7 @@ After changing anything, run `npm test`. The Module 2 suite asserts *constraints
 values, and those are the ones that matter:
 
 - Lifetime maintenance and insurance must be identical at 3.75% and 8% appreciation.
+- The renter's year-50 net worth must be unmoved by any buyer-side recurring cost.
 - Buyer net worth must increase monotonically with appreciation.
 - Property tax must be the only cost that tracks market value.
 - PMI must terminate and never be charged at 20% down.
@@ -156,8 +157,15 @@ decision, a different answer because of where you live.
 
 Two honest caveats to raise in class if they come up. The model compares a *pre-tax*
 brokerage return against a home gain that is tax-free up to $250,000 under IRC §121; drag
-the return to about 6.5% for the after-tax version. And it assumes the renter invests every
-dollar of the difference every month and never spends it, which almost nobody does.
+the return to about 6.5% for the after-tax version. And it assumes both households save
+every spare dollar of the budget every month and never spend it, which almost nobody does.
+
+**How the comparison is kept fair.** Both households live on the same monthly budget for
+housing plus saving, and each invests whatever housing does not consume. That matters:
+under the earlier rule the renter's saving was defined as the buyer's outlay minus their
+own, so raising a buyer cost handed the renter money. An $800/mo HOA on a house the renter
+does not live in made them $5.2M richer by year 50. Now the renter's result depends only on
+renter-side inputs, and a rate rise instead shows up as months the buyer cannot afford.
 
 ## Layout
 

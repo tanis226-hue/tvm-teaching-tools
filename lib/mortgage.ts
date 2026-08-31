@@ -34,6 +34,16 @@ export type RentBuyInput = {
   rentIncreasePct: number
   rentersInsMonthly: number
   investReturn: number
+  /**
+   * What the household can put toward housing AND saving each month, in year-1
+   * dollars, growing with inflation. Both paths spend their housing costs out
+   * of this and invest the remainder, which is what keeps the renter's outcome
+   * independent of the buyer's costs. Defaults to the buyer's month-1 outlay at
+   * each preset rounded up to a round number, so the preset is affordable with
+   * a little slack rather than sitting exactly on the edge, where a single
+   * slider step would trip the over-budget warning.
+   */
+  monthlyBudget: number
 }
 
 export type MonthRow = {
@@ -71,6 +81,8 @@ export type RentBuyResult = {
   outlayCrossingMonth: number | null
   totalInterest: number
   totalPmi: number
+  /** Months the buyer's outlay exceeds the household budget, i.e. is unaffordable. */
+  monthsOverBudget: number
   rows: MonthRow[]
 }
 
@@ -118,6 +130,7 @@ export function simulateRentBuy(input: RentBuyInput): RentBuyResult {
   let renterInvest = upfront
   let totalInterest = 0
   let totalPmi = 0
+  let monthsOverBudget = 0
   let breakevenMonth: number | null = null
   let outlayCrossingMonth: number | null = null
   const crossings: number[] = []
@@ -163,11 +176,20 @@ export function simulateRentBuy(input: RentBuyInput): RentBuyResult {
     const rent = input.startingRent * (1 + rentM) ** (m - 1)
     const renterOutlay = rent + input.rentersInsMonthly * inflator
 
-    buyerInvest *= 1 + retM
-    renterInvest *= 1 + retM
-    const diff = renterOutlay - buyerOutlay
-    if (diff > 0) buyerInvest += diff
-    else renterInvest += -diff
+    // Each household has the same budget for housing plus saving, and saves
+    // whatever it does not spend on housing.
+    //
+    // The previous rule gave the renter `buyerOutlay - renterOutlay`, which
+    // made the household budget a function of the BUYER's costs. Raising any
+    // buyer cost then handed the renter cash: an $800/mo HOA on a house the
+    // renter does not live in made them $5.2M richer by year 50, and a 10%
+    // mortgage rate left them 3.5x wealthier than a 4% one. Anchoring the
+    // budget breaks that causal link, so the renter's outcome now depends only
+    // on renter-side inputs.
+    const budget = input.monthlyBudget * inflator
+    if (buyerOutlay > budget) monthsOverBudget++
+    buyerInvest = buyerInvest * (1 + retM) + (budget - buyerOutlay)
+    renterInvest = renterInvest * (1 + retM) + (budget - renterOutlay)
 
     const equity = homeValue - balance
     const buyerNetWorth = homeValue - balance - homeValue * input.closingSellPct + buyerInvest
@@ -196,7 +218,7 @@ export function simulateRentBuy(input: RentBuyInput): RentBuyResult {
 
   return {
     monthlyPI, upfront, breakevenMonth, crossings, settledAheadMonth,
-    outlayCrossingMonth, totalInterest, totalPmi, rows,
+    outlayCrossingMonth, totalInterest, totalPmi, monthsOverBudget, rows,
   }
 }
 
@@ -224,6 +246,7 @@ export const FORT_MYERS: RentBuyInput = {
   includeFlood: true, // 74.7% of Lee County SF NFIP policies are in an SFHA
   startingRent: 2_200, // Zillow ZORI SFR Cape Coral-Fort Myers, 2026-07-31
   rentersInsMonthly: 30,
+  monthlyBudget: 3_600, // the buyer's month-1 outlay ($3,568) rounded up to a round number
 }
 
 export const NATIONAL: RentBuyInput = {
@@ -245,6 +268,7 @@ export const NATIONAL: RentBuyInput = {
   includeFlood: false,
   startingRent: 2_300, // Zillow ZORI SFR US, 2026-07-31
   rentersInsMonthly: 25,
+  monthlyBudget: 3_300, // the buyer's month-1 outlay ($3,270) rounded up to a round number
 }
 
 export const PRESETS = { fortMyers: FORT_MYERS, national: NATIONAL } as const
