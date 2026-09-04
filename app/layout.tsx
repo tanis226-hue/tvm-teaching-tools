@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Time Value of Money",
-  description: "FSW Business Mathematics teaching tools: retirement and rent vs buy.",
+  description: "Free teaching tools for the time value of money: retirement saving, and rent vs buy.",
 };
 
 export const viewport: Viewport = {
@@ -31,7 +30,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-slate-100 text-slate-900">
-        <SiteHeader />
         {children}
       </body>
     </html>

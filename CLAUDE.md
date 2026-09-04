@@ -108,15 +108,25 @@ literals.
 
 ## Branding
 
-FSW = Florida SouthWestern State College. Brand colors are FSW Purple `#470a68`
-and Aqua `#00bfaa`, published on fsw.edu. They live as `--color-brand*` and
-`--color-accent*` in `app/globals.css`; use the `brand`/`accent` Tailwind
-utilities, never raw `slate-900`, for primary actions and active states.
+**Never commit an institution's logo, seal or lettermark.** The repo is public
+and MIT licensed, and a trademark licence does not travel with a fork: whoever
+clones this would be shipping someone else's mark. `components/SiteHeader.tsx`
+is text only and must stay that way. An earlier version carried an FSW
+lettermark; it was removed for exactly this reason, so do not reintroduce one.
 
-The header mark is a lettermark, not FSW's official seal. Their licensing page
-restricts the trademarked logo to marketing-approved licensees, so do not
-scrape and embed it. If the college supplies an approved asset, drop it in
-`public/` and swap it into `components/SiteHeader.tsx`.
+Instructors brand their own class instead: `/instructor` has an optional name
+field, stored as `sessions.label`, rendered in the header on `/s/[code]` and
+`/d/[code]`. It is free text, never a URL. A public tool that rendered an
+instructor-supplied image URL would serve arbitrary remote images from this
+domain to anyone holding a session code. Run it through
+`normalizeSessionLabel`, which collapses control characters and caps the
+length.
+
+The default palette is FSW Purple `#470a68` and Aqua `#00bfaa`, published on
+fsw.edu, but the tokens are deliberately named for their role, not the college:
+`--color-brand*` and `--color-accent*` in `app/globals.css`. Use the
+`brand`/`accent` Tailwind utilities, never raw `slate-900`, for primary actions
+and active states, so a fork can rebrand by editing two values.
 
 Do not confuse FSW with FGCU. Two `FGCU RERI` citations in `lib/mortgage.ts`
 and the README are correct: that is Florida Gulf Coast University's Regional

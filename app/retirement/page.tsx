@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { RetirementCalculator } from '@/components/RetirementCalculator'
+import { SiteHeader } from '@/components/SiteHeader'
 
 export const metadata: Metadata = {
   title: 'Retirement calculator',
@@ -10,5 +11,10 @@ export const metadata: Metadata = {
 // The practice version. Same component as the in-class route, so the numbers a
 // student sees here are identical to the ones from the lecture.
 export default function RetirementPracticePage() {
-  return <RetirementCalculator />
+  return (
+    <>
+      <SiteHeader />
+      <RetirementCalculator />
+    </>
+  )
 }

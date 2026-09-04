@@ -15,3 +15,19 @@ export const submissionSchema = z
   })
 
 export type SubmissionPayload = z.infer<typeof submissionSchema>
+
+export const MAX_SESSION_LABEL = 60
+
+// An instructor types this and it renders on a lecture-hall projector. React
+// escapes the value, so this is about layout rather than injection: collapse
+// control characters and whitespace runs so a pasted newline cannot push the
+// header open, and cap the length so a long name cannot crowd out the page.
+export function normalizeSessionLabel(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null
+  const clean = raw
+    .replace(/[\u0000-\u001F\u007F]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_SESSION_LABEL)
+  return clean.length > 0 ? clean : null
+}

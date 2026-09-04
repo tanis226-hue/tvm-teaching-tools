@@ -5,6 +5,7 @@ import type { SubmissionRow } from '@/lib/db'
 import { median } from '@/lib/stats'
 import { usd } from '@/lib/format'
 import { DashboardCharts } from '@/components/DashboardCharts'
+import { SiteHeader } from '@/components/SiteHeader'
 import { instructorTokenKey } from '@/app/instructor/page'
 
 const POLL_MS = 8_000
@@ -35,6 +36,7 @@ function percentileSpread(xs: number[]): string {
 export default function DashboardPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params)
   const [rows, setRows] = useState<SubmissionRow[]>([])
+  const [label, setLabel] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [stopped, setStopped] = useState(false)
   const [closed, setClosed] = useState(false)
@@ -71,6 +73,7 @@ export default function DashboardPage({ params }: { params: Promise<{ code: stri
       const body = await res.json().catch(() => null)
       if (res.ok && body?.submissions) {
         setRows(body.submissions)
+        setLabel(body.label ?? null)
         setError('')
       } else {
         setError(body?.error ?? `Could not load results (${res.status})`)
@@ -101,61 +104,64 @@ export default function DashboardPage({ params }: { params: Promise<{ code: stri
   const contributions = rows.map(r => Number(r.first_contribution))
 
   return (
-    <main className="mx-auto max-w-7xl space-y-6 px-6 py-8">
-      <header className="flex flex-wrap items-baseline justify-between gap-4">
-        <h1 className="text-4xl font-bold text-slate-900">Class results</h1>
-        <p className="font-mono text-3xl font-bold tracking-widest text-slate-500">{code}</p>
-      </header>
+    <>
+      <SiteHeader label={label} />
+      <main className="mx-auto max-w-7xl space-y-6 px-6 py-8">
+        <header className="flex flex-wrap items-baseline justify-between gap-4">
+          <h1 className="text-4xl font-bold text-slate-900">Class results</h1>
+          <p className="font-mono text-3xl font-bold tracking-widest text-slate-500">{code}</p>
+        </header>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Responses" value={String(rows.length)} />
-        <Stat label="Median target income" value={usd(median(incomes))} />
-        <Stat label="Median monthly saving" value={usd(median(contributions))} />
-        {/* Min-to-max would be pinned to the full legal range by any two
-            students who pick the extremes, which happens immediately. */}
-        <Stat label="Middle 80% of targets" value={percentileSpread(incomes)} />
-      </div>
-
-      {error && <p className="text-center text-xl text-red-600">{error}</p>}
-
-      {closed && (
-        <p className="rounded-2xl border-2 border-brand bg-brand p-4 text-center text-xl font-semibold text-white shadow-sm">
-          Session closed. No further submissions will be accepted.
-        </p>
-      )}
-
-      {token && !closed && (
-        <div className="text-center">
-          <button
-            onClick={closeSession}
-            className="rounded-xl border-2 border-slate-400 px-6 py-2 text-base font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-          >
-            Close session
-          </button>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <Stat label="Responses" value={String(rows.length)} />
+          <Stat label="Median target income" value={usd(median(incomes))} />
+          <Stat label="Median monthly saving" value={usd(median(contributions))} />
+          {/* Min-to-max would be pinned to the full legal range by any two
+              students who pick the extremes, which happens immediately. */}
+          <Stat label="Middle 80% of targets" value={percentileSpread(incomes)} />
         </div>
-      )}
 
-      {stopped && (
-        <div className="rounded-2xl border-2 border-amber-500 bg-amber-50 p-6 text-center">
-          <p className="text-lg text-amber-900">
-            Live updates paused to save database time.
+        {error && <p className="text-center text-xl text-red-600">{error}</p>}
+
+        {closed && (
+          <p className="rounded-2xl border-2 border-brand bg-brand p-4 text-center text-xl font-semibold text-white shadow-sm">
+            Session closed. No further submissions will be accepted.
           </p>
-          <button
-            onClick={() => setStopped(false)}
-            className="mt-3 rounded-xl border-2 border-brand px-6 py-3 text-lg font-semibold text-brand transition-colors hover:bg-brand-tint"
-          >
-            Resume
-          </button>
-        </div>
-      )}
+        )}
 
-      {rows.length === 0 ? (
-        <p className="py-24 text-center text-3xl text-slate-400">
-          Waiting for the first response...
-        </p>
-      ) : (
-        <DashboardCharts rows={rows} />
-      )}
-    </main>
+        {token && !closed && (
+          <div className="text-center">
+            <button
+              onClick={closeSession}
+              className="rounded-xl border-2 border-slate-400 px-6 py-2 text-base font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Close session
+            </button>
+          </div>
+        )}
+
+        {stopped && (
+          <div className="rounded-2xl border-2 border-amber-500 bg-amber-50 p-6 text-center">
+            <p className="text-lg text-amber-900">
+              Live updates paused to save database time.
+            </p>
+            <button
+              onClick={() => setStopped(false)}
+              className="mt-3 rounded-xl border-2 border-brand px-6 py-3 text-lg font-semibold text-brand transition-colors hover:bg-brand-tint"
+            >
+              Resume
+            </button>
+          </div>
+        )}
+
+        {rows.length === 0 ? (
+          <p className="py-24 text-center text-3xl text-slate-400">
+            Waiting for the first response...
+          </p>
+        ) : (
+          <DashboardCharts rows={rows} />
+        )}
+      </main>
+    </>
   )
 }

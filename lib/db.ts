@@ -16,6 +16,7 @@ function sql() {
 export type SessionRow = {
   id: string
   code: string
+  label: string | null
   closed_at: string | null
   created_at: string
 }
@@ -52,14 +53,15 @@ export async function purgeExpiredSessions(): Promise<number> {
   return rows.length
 }
 
-export async function createSession() {
+export async function createSession(label: string | null = null) {
   await purgeExpiredSessions()
   const code = generateSessionCode()
   const instructorToken = crypto.randomUUID()
   await sql()`
-    insert into sessions (code, instructor_token) values (${code}, ${instructorToken})
+    insert into sessions (code, instructor_token, label)
+    values (${code}, ${instructorToken}, ${label})
   `
-  return { code, instructorToken }
+  return { code, instructorToken, label }
 }
 
 // The age filter, not just the purge, is what makes the retention window real:
@@ -67,7 +69,7 @@ export async function createSession() {
 // dashboard whether or not anyone has started a session lately.
 export async function getSession(code: string): Promise<SessionRow | null> {
   const rows = (await sql()`
-    select id, code, closed_at, created_at from sessions
+    select id, code, label, closed_at, created_at from sessions
     where code = ${code.toUpperCase()}
       and created_at >= now() - make_interval(days => ${RETENTION_DAYS})
   `) as unknown as SessionRow[]

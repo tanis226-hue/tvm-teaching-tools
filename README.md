@@ -7,10 +7,8 @@
 | Retirement calculator (students, anytime) | https://tvm-tools.netlify.app/retirement |
 | Rent vs buy (students and projector) | https://tvm-tools.netlify.app/rentbuy |
 | Start a class session (instructor) | https://tvm-tools.netlify.app/instructor |
-| Netlify admin | https://app.netlify.com/projects/tvm-tools |
-| Neon project | `tvm-teaching-tools`, region `aws-us-east-1` |
 
-Two web tools for a first-semester Business Mathematics course at FSW (Florida SouthWestern State College). Free to use, no sign-in, nothing to install.
+Two web tools for a first-semester Business Mathematics course. Free to use, no sign-in, nothing to install, and not tied to any one college: put your own class name on a session and the header follows. Built for a course at FSW (Florida SouthWestern State College), which is where the Fort Myers housing preset comes from.
 
 - **Module 1, Retirement calculator.** Student-facing and mobile-first. During a lecture it is reached by QR code and can send an anonymous answer to a live instructor dashboard. Outside of a lecture, `/retirement` is the same calculator with the submit step removed, so a student can revisit it any time.
 - **Module 2, Rent vs buy explorer.** Slider-driven. Surfaces a breakeven year and lets you move it. No database, no session, so students can open it directly too.
@@ -19,13 +17,18 @@ Both student-facing pages are static and hit no database. Only the class-session
 
 ## Using this in your own course
 
-It is MIT licensed. Two ways in, and the first needs nothing from you:
+It is MIT licensed. Three ways in, and the first two need nothing from you:
 
-1. **Send students straight to the links.** `/retirement` and `/rentbuy` are static
+1. **Start a session and put your own name on it.** `/instructor` has an optional
+   "class or school name" field. Whatever you type rides in the header for the students
+   who scan into that session and on the results dashboard, so the projector says
+   *MAT 1033, Prof. Rivera* rather than someone else's college. Nothing to install and
+   nothing to configure.
+2. **Send students straight to the links.** `/retirement` and `/rentbuy` are static
    pages with no sign-in, no database and nothing saved. Put them on a slide or a QR
    code and you are done. Every default is sourced and dated in the table below, so
    you can see exactly what the numbers assume before you show them to a class.
-2. **Fork it and run your own class sessions.** The live dashboard writes to a
+3. **Fork it and run your own class sessions.** The live dashboard writes to a
    database, so point it at your own free Neon project rather than sharing this one:
    clone, apply `db/schema.sql`, set `DATABASE_URL`, deploy. That also lets you change
    the presets to your own housing market, which is the part most worth localising.
@@ -33,6 +36,13 @@ It is MIT licensed. Two ways in, and the first needs nothing from you:
 The Fort Myers preset is Lee County, Florida. If you teach somewhere else, replace the
 price, rent, insurance and property tax in `lib/mortgage.ts` with your own metro's
 numbers and the lesson lands harder.
+
+**On branding.** No college logo or seal is committed to this repo, and none should be:
+a trademark licence does not travel with a fork, and most institutions restrict their
+mark to approved licensees. The header is text only. The default palette is FSW's
+published purple and aqua, living as `--color-brand` and `--color-accent` in
+`app/globals.css`; change those two tokens and the whole app follows. If your own
+institution has cleared you to use its mark, add the file in your fork, not here.
 
 ## Running it
 
@@ -214,4 +224,4 @@ app/api              session create/close/results, submission
 MIT, see `LICENSE`. Use it, fork it, change the numbers, teach with it. No attribution
 required, though a note saying you used it is always welcome.
 
-`docs/superpowers/specs/` holds the design doc: what the tool does now, and a changelog of the three model corrections and why each mattered. The original implementation plan and the throwaway verification scripts were deleted once they went stale; they are in git history if the reasoning is ever needed.
+[`docs/design.md`](docs/design.md) is the design doc: what the tool does now, and a changelog of the three model corrections and why each mattered. The original implementation plan and the throwaway verification scripts were deleted once they went stale; they are in git history if the reasoning is ever needed.

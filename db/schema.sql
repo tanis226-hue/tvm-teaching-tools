@@ -8,6 +8,11 @@ create table if not exists sessions (
   closed_at        timestamptz
 );
 
+-- Optional, instructor-supplied, shown in the header on the projector. Added
+-- after the first release, so this doubles as the migration: re-running
+-- schema.sql upgrades an existing database as well as creating a new one.
+alter table sessions add column if not exists label text;
+
 create table if not exists submissions (
   id                 uuid primary key default gen_random_uuid(),
   session_id         uuid not null references sessions(id) on delete cascade,
